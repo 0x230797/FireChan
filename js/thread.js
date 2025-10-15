@@ -136,7 +136,8 @@ async function loadThreads() {
         const querySnapshot = await getDocs(q);
         let threadsHTML = '';
         
-        querySnapshot.forEach((doc) => {
+        // Procesar cada thread
+        for (const doc of querySnapshot.docs) {
             const thread = doc.data();
             const timestamp = thread.timestamp ? 
                 (thread.timestamp.toDate ? thread.timestamp.toDate() : new Date(thread.timestamp)) 
@@ -151,26 +152,32 @@ async function loadThreads() {
                 </div>
             ` : '';
 
+            // Cargar las últimas 5 respuestas de este thread
+            const repliesHTML = await loadLastReplies(doc.id, thread.replyCount, thread.postId);
+            
             threadsHTML += `
-                <div class="thread-op">
-                    ${fileSection}
-                    <div class="post-image">
-                        ${thread.imageUrl ? `<img src="${thread.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
+                <div class="thread-container">
+                    <div class="thread-op" data-post-id="${thread.postId}" data-id="${thread.postId}">
+                        ${fileSection}
+                        <div class="post-image">
+                            ${thread.imageUrl ? `<img src="${thread.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
+                        </div>
+                        <div class="thread-header">
+                            <span class="subject">${thread.subject || ''}</span>
+                            <span class="name">${thread.name || 'Anónimo'}</span>
+                            <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
+                            <span class="id" onclick="quotePost('${thread.postId || 'N/A'}')" style="cursor: pointer;">No.${thread.postId || 'N/A'}</span>
+                            <a href="reply.html?board=${currentBoard}&thread=${thread.postId}" class="replies-btn">
+                                Responder (${thread.replyCount || 0})
+                            </a>
+                            <button class="report-btn" onclick="reportPost('${doc.id}', 'thread', ${thread.postId}, '${encodeURIComponent(thread.name || 'Anónimo')}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">Reportar</button>
+                        </div>
+                        <div class="comment">${processText(thread.comment)}</div>
                     </div>
-                    <div class="thread-header">
-                        <span class="subject">${thread.subject || ''}</span>
-                        <span class="name">${thread.name || 'Anónimo'}</span>
-                        <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
-                        <span class="id">No.${thread.postId || 'N/A'}</span>
-                        <a href="reply.html?board=${currentBoard}&thread=${thread.postId}" class="replies-btn">
-                            Responder (${thread.replyCount || 0})
-                        </a>
-                        <button class="report-btn" onclick="reportPost('${doc.id}', 'thread', ${thread.postId}, '${encodeURIComponent(thread.name || 'Anónimo')}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">Reportar</button>
-                    </div>
-                    <div class="comment">${processText(thread.comment)}</div>
+                    ${repliesHTML}
                 </div>
             `;
-        });
+        }
         
         threadsContainer.innerHTML = threadsHTML || 'No hay threads en este tablón';
     } catch (error) {
@@ -347,5 +354,85 @@ async function submitReport(contentId, contentType, postId, name, comment, image
     } catch (error) {
         console.error('Error al enviar reporte:', error);
         alert('Error al enviar el reporte: ' + error.message);
+    }
+}
+
+// Función para cargar las últimas 5 respuestas de un thread
+async function loadLastReplies(threadId, totalReplies, threadPostId) {
+    try {
+        if (!totalReplies || totalReplies === 0) {
+            return '';
+        }
+
+        const q = query(
+            collection(db, 'replies'),
+            where('threadId', '==', threadId),
+            orderBy('timestamp', 'desc')
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const replies = [];
+        
+        // Tomar solo las últimas 5 respuestas
+        let count = 0;
+        querySnapshot.forEach((doc) => {
+            if (count < 5) {
+                replies.push(doc.data());
+                count++;
+            }
+        });
+        
+        // Invertir el array para mostrar en orden cronológico
+        replies.reverse();
+        
+        let repliesHTML = '';
+        
+        // Agregar indicador si hay más respuestas
+        if (totalReplies > 5) {
+            const omittedCount = totalReplies - 5;
+            repliesHTML += `
+                <div class="omitted-replies">
+                    <em>${omittedCount} respuesta${omittedCount > 1 ? 's' : ''} omitida${omittedCount > 1 ? 's' : ''}. 
+                    <a href="reply.html?board=${currentBoard}&thread=${threadPostId}">Ver thread completo</a></em>
+                </div>
+            `;
+        }
+        
+        // Generar HTML para cada respuesta
+        replies.forEach((reply) => {
+            const timestamp = reply.timestamp ? 
+                (reply.timestamp.toDate ? reply.timestamp.toDate() : new Date(reply.timestamp)) 
+                : new Date();
+
+            // Crear sección de archivo para reply si hay imagen
+            const replyFileSection = reply.imageUrl ? `
+                <div class="post-header-file">
+                    <b>Archivo:</b>
+                    <a href="${reply.imageUrl}" target="_blank" title="${reply.fileName || 'imagen.jpg'}">${reply.fileName || 'imagen.jpg'}</a>
+                    ${reply.fileSize ? `(${formatFileSize(reply.fileSize)}${reply.imageWidth && reply.imageHeight ? `, ${reply.imageWidth}x${reply.imageHeight}` : ''})` : ''}
+                </div>
+            ` : '';
+
+            repliesHTML += `
+                <div class="reply-post reply-preview" data-post-id="${reply.postId}" data-id="${reply.postId}">
+                    ${replyFileSection}
+                    <div class="post-image">
+                        ${reply.imageUrl ? `<img src="${reply.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
+                    </div>
+                    <div class="reply-header">
+                        <span class="name">${reply.name || 'Anónimo'}</span>
+                        <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
+                        <span class="id" onclick="quotePost('${reply.postId || 'N/A'}')" style="cursor: pointer;">No.${reply.postId || 'N/A'}</span>
+                        <button class="report-btn" onclick="reportPost('${threadId}', 'reply', ${reply.postId}, '${encodeURIComponent(reply.name || 'Anónimo')}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>
+                    </div>
+                    <div class="comment">${processText(reply.comment)}</div>
+                </div>
+            `;
+        });
+        
+        return repliesHTML;
+    } catch (error) {
+        console.error('Error al cargar respuestas:', error);
+        return '';
     }
 }

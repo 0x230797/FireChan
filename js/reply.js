@@ -19,6 +19,7 @@ function formatFileSize(bytes) {
 document.addEventListener('DOMContentLoaded', () => {
     loadThread();
     setupNavigation();
+    loadQuoteFromURL();
 });
 
 function setupNavigation() {
@@ -26,6 +27,35 @@ function setupNavigation() {
     backLinks.forEach(link => {
         link.href = `thread.html?board=${currentBoard}`;
     });
+}
+
+function loadQuoteFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const quote = urlParams.get('quote');
+    
+    if (quote) {
+        // Decodificar la cita y cargarla en el campo de comentario
+        const decodedQuote = decodeURIComponent(quote);
+        const commentField = document.getElementById('replyComment');
+        
+        if (commentField) {
+            commentField.value = decodedQuote;
+            
+            // Mostrar el formulario de respuesta automáticamente
+            const replyForm = document.getElementById('replyFormContainer');
+            if (replyForm) {
+                replyForm.style.display = 'block';
+            }
+            
+            // Enfocar el campo de comentario al final del texto
+            commentField.focus();
+            commentField.setSelectionRange(commentField.value.length, commentField.value.length);
+        }
+        
+        // Limpiar la URL para evitar que la cita se cargue múltiples veces
+        const newURL = window.location.pathname + `?board=${currentBoard}&thread=${threadId}`;
+        window.history.replaceState({}, document.title, newURL);
+    }
 }
 
 // Función para generar el siguiente ID de post (igual que en thread.js)
@@ -151,6 +181,9 @@ async function loadThread() {
         
         displayThread(threadData, threadDoc.id);
         await loadReplies();
+        
+        // Implementar la función de búsqueda de posts para previews
+        window.fetchPostPreview = fetchPostPreview;
     } catch (error) {
         document.getElementById('threadContainer').innerHTML = 'Error: ' + error.message;
     }
@@ -172,7 +205,7 @@ function displayThread(thread, id) {
 
     const container = document.getElementById('threadContainer');
     container.innerHTML = `
-        <div class="thread thread-op" data-id="${thread.postId || 'N/A'}">
+        <div class="thread thread-op" data-id="${thread.postId || 'N/A'}" data-post-id="${thread.postId || 'N/A'}">
             ${fileSection}
             <div class="post-image">
                 ${thread.imageUrl ? `<img src="${thread.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
@@ -181,7 +214,7 @@ function displayThread(thread, id) {
                 <span class="subject">${thread.subject || ''}</span>
                 <span class="name">${thread.name || 'Anónimo'}</span>
                 <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
-                <span class="id">No.${thread.postId || 'N/A'}</span>
+                <span class="id" onclick="quotePost('${thread.postId || 'N/A'}')" style="cursor: pointer;">No.${thread.postId || 'N/A'}</span>
             </div>
             <div class="comment">${processText(thread.comment)}</div>
         </div>
@@ -218,7 +251,7 @@ async function loadReplies() {
             ` : '';
 
             repliesHTML += `
-                <div class="reply reply-post">
+                <div class="reply-post" data-post-id="${reply.postId}" data-id="${reply.postId}">
                     ${replyFileSection}
                     <div class="post-image">
                         ${reply.imageUrl ? `<img src="${reply.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
@@ -226,7 +259,7 @@ async function loadReplies() {
                     <div class="reply-header">
                         <span class="name">${reply.name || 'Anónimo'}</span>
                         <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
-                        <span class="id">No.${reply.postId || 'N/A'}</span>
+                        <span class="id" onclick="quotePost('${reply.postId || 'N/A'}')" style="cursor: pointer;">No.${reply.postId || 'N/A'}</span>
                         <button class="report-btn" onclick="reportPost('${doc.id}', 'reply', ${reply.postId}, '${encodeURIComponent(reply.name || 'Anónimo')}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>
                     </div>
                     <div class="comment">${processText(reply.comment)}</div>
@@ -249,6 +282,15 @@ window.submitReply = async () => {
     if (!comment) {
         alert('El comentario es obligatorio');
         return;
+    }
+
+    // Detectar si el comentario contiene referencias a otros posts
+    const referencedPostIds = extractReferencedPosts(comment);
+    let parentPostId = null;
+    
+    // Si hay referencias, tomar la primera como parent (respuesta directa)
+    if (referencedPostIds.length > 0) {
+        parentPostId = referencedPostIds[0];
     }
 
     if (file) {
@@ -301,6 +343,8 @@ window.submitReply = async () => {
             imageWidth,
             imageHeight,
             postId,
+            parentPostId,
+            referencedPosts: referencedPostIds,
             timestamp: serverTimestamp()
         });
 
@@ -384,5 +428,82 @@ async function submitReport(contentId, contentType, postId, name, comment, image
     } catch (error) {
         console.error('Error al enviar reporte:', error);
         alert('Error al enviar el reporte: ' + error.message);
+    }
+}
+
+// Función para extraer números de posts referenciados en un comentario
+function extractReferencedPosts(comment) {
+    const matches = comment.match(/>>(\d+)/g);
+    if (!matches) return [];
+    
+    return matches.map(match => match.replace('>>', '')).filter((id, index, self) => {
+        // Remover duplicados
+        return self.indexOf(id) === index;
+    });
+}
+
+// Función para buscar y mostrar preview de un post
+async function fetchPostPreview(postId) {
+    try {
+        // Primero buscar en threads (post original)
+        const threadQuery = query(
+            collection(db, 'threads'),
+            where('postId', '==', parseInt(postId)),
+            where('board', '==', currentBoard)
+        );
+        
+        const threadSnapshot = await getDocs(threadQuery);
+        
+        if (!threadSnapshot.empty) {
+            const threadData = threadSnapshot.docs[0].data();
+            const timestamp = threadData.timestamp ? 
+                (threadData.timestamp.toDate ? threadData.timestamp.toDate() : new Date(threadData.timestamp)) 
+                : new Date();
+                
+            return `
+                <div class="thread thread-op post-preview">
+                    <div class="thread-header">
+                        <span class="subject">${threadData.subject || ''}</span>
+                        <span class="name">${threadData.name || 'Anónimo'}</span>
+                        <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
+                        <span class="id">No.${threadData.postId}</span>
+                    </div>
+                    <div class="comment">${processText(threadData.comment)}</div>
+                    ${threadData.imageUrl ? `<div class="post-image"><img src="${threadData.imageUrl}" class="thread-image preview-image"></div>` : ''}
+                </div>
+            `;
+        }
+        
+        // Si no es un thread, buscar en replies
+        const replyQuery = query(
+            collection(db, 'replies'),
+            where('postId', '==', parseInt(postId))
+        );
+        
+        const replySnapshot = await getDocs(replyQuery);
+        
+        if (!replySnapshot.empty) {
+            const replyData = replySnapshot.docs[0].data();
+            const timestamp = replyData.timestamp ? 
+                (replyData.timestamp.toDate ? replyData.timestamp.toDate() : new Date(replyData.timestamp)) 
+                : new Date();
+                
+            return `
+                <div class="reply-post post-preview">
+                    <div class="reply-header">
+                        <span class="name">${replyData.name || 'Anónimo'}</span>
+                        <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
+                        <span class="id">No.${replyData.postId}</span>
+                    </div>
+                    <div class="comment">${processText(replyData.comment)}</div>
+                    ${replyData.imageUrl ? `<div class="post-image"><img src="${replyData.imageUrl}" class="thread-image preview-image"></div>` : ''}
+                </div>
+            `;
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('Error al obtener preview del post:', error);
+        return null;
     }
 }
