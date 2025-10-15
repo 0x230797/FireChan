@@ -266,13 +266,21 @@ function updateBoardTitle() {
         'g': 'Tecnología',
         'v': 'Videojuegos',
         'a': 'Anime & Manga',
-        'fit': 'Fitness',
-        'mu': 'Música',
         'pol': 'Política',
         'x': 'Paranormal'
     };
 
+    const boardDescriptions = {
+        'b': 'Conversaciones aleatorias y contenido variado',
+        'g': 'Discusiones sobre tecnología, programación y gadgets',
+        'v': 'Todo sobre videojuegos y gaming',
+        'a': 'Anime, manga y cultura japonesa',
+        'pol': 'Política y actualidad',
+        'x': 'Temas paranormales y misterios'
+    };
+
     document.getElementById('boardTitle').textContent = `/${currentBoard}/ - ${boardTitles[currentBoard] || ''}`;
+    document.getElementById('boardSubtitle').textContent = boardDescriptions[currentBoard] || '';
 }
 
 window.showPostForm = () => {
