@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respuestas - Imageboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="header small">
+        <h1 id="boardTitle">Respuestas</h1>
+    </div>
+
+    <div class="nav">
+        <a href="index.html">Inicio</a>
+        <a href="rules.html">Reglas</a>
+        <a id="backToBoard" href="#">Volver al tablón</a>
+        <a href="admin.html">Admin</a>
+    </div>
+
+    <div class="container">
+        <a class="back-link" id="backLink" href="#">← Volver al tablón</a>
+
+        <div id="threadContainer" class="loading"></div>
+
+        <div id="repliesContainer" class="loading"></div>
+
+        <div id="replyFormContainer" class="post-form">
+            <h3>Responder al thread</h3>
+            <table>
+                <tr>
+                    <td>Nombre:</td>
+                    <td><input type="text" id="replyName" placeholder="Anónimo"></td>
+                </tr>
+                <tr>
+                    <td>Comentario:</td>
+                    <td><textarea id="replyComment" rows="5" required></textarea></td>
+                </tr>
+                <tr>
+                    <td>Archivo:</td>
+                    <td><input type="file" id="replyFile" accept="image/*"></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><span style="font-size:7pt;color:rgb(102, 102, 102);text-align:right">Formatos permitidos: JPG, JPEG, PNG, GIF, WEBP. Tamaño máximo: 5MB.</span></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><button onclick="submitReply()">Publicar Respuesta</button></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+        <img id="lightboxImg" src="" alt="">
+    </div>
+
+    <script type="module" src="js/reply.js"></script>
+
+    <div class="footer">
+        <p>Todo el contenido publicado es ficticio y se proporciona únicamente con fines de entretenimiento.</p>
+    </div>
+</body>
+</html>

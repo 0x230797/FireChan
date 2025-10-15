@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Imageboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="header small">
+        <h1>Panel de Administración</h1>
+    </div>
+
+    <div class="nav">
+        <a href="index.html">Inicio</a>
+        <a href="rules.html">Reglas</a>
+        <a href="#" onclick="logout()">Cerrar Sesión</a>
+    </div>
+
+    <div class="container">
+        <div id="loginPanel" class="login-panel">
+            <h2>Acceso Administrativo</h2>
+            <input type="text" id="adminUser" placeholder="Usuario" value="admin@minichan.com">
+            <input type="password" id="adminPass" placeholder="Contraseña" value="admin123" onkeypress="handleEnterKey(event)">
+            <button onclick="login()">Iniciar Sesión</button>
+        </div>
+
+        <div id="adminContent" class="admin-content">
+            <div class="stats-panel">
+                <h3>Estadísticas Generales</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalThreads">0</div>
+                        <div class="stat-label">Total Threads</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalReplies">0</div>
+                        <div class="stat-label">Total Respuestas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalToday">0</div>
+                        <div class="stat-label">Posts Hoy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalReports">0</div>
+                        <div class="stat-label">Reportes Pendientes</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('threads')">Threads</div>
+                <div class="tab" onclick="switchTab('replies')">Respuestas</div>
+                <div class="tab" onclick="switchTab('reports')">Reportes</div>
+            </div>
+
+            <div id="threadsTab" class="tab-content active">
+                <div class="board-selector">
+                    <label>Filtrar por tablón:</label>
+                    <select id="boardFilter">
+                        <option value="all">Todos</option>
+                        <option value="b">Random (/b/)</option>
+                        <option value="g">Technology (/g/)</option>
+                        <option value="v">Video Games (/v/)</option>
+                        <option value="a">Anime & Manga (/a/)</option>
+                        <option value="fit">Fitness (/fit/)</option>
+                        <option value="mu">Music (/mu/)</option>
+                        <option value="pol">Politics (/pol/)</option>
+                        <option value="x">Paranormal (/x/)</option>
+                    </select>
+                    <button onclick="loadThreads()">Aplicar Filtro</button>
+                    <button onclick="loadThreads()">Actualizar</button>
+                </div>
+
+                <div id="threadsContainer" class="content-list loading">
+                    Cargando threads...
+                </div>
+            </div>
+
+            <div id="repliesTab" class="tab-content">
+                <div class="board-selector">
+                    <button onclick="loadReplies()">Actualizar Respuestas</button>
+                </div>
+
+                <div id="repliesContainer" class="content-list loading">
+                    Cargando respuestas...
+                </div>
+            </div>
+
+            <div id="reportsTab" class="tab-content">
+                <div class="board-selector">
+                    <button onclick="loadReports()">Actualizar Reportes</button>
+                    <button onclick="clearAllReports()">Limpiar Todos</button>
+                </div>
+
+                <div id="reportsContainer" class="content-list loading">
+                    Cargando reportes...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/admin.js"></script>
+
+    <div class="footer">
+        <p>Todo el contenido publicado es ficticio y se proporciona únicamente con fines de entretenimiento.</p>
+    </div>
+</body>
+</html>
