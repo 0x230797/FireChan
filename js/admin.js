@@ -168,11 +168,27 @@ window.loadReplies = async () => {
         const querySnapshot = await getDocs(q);
         let repliesHTML = '';
         
+        // Obtener información de todos los threads para mapear threadId -> board y threadId -> postId
+        const threadsQuery = query(collection(db, 'threads'));
+        const threadsSnapshot = await getDocs(threadsQuery);
+        const threadBoardMap = {};
+        const threadPostIdMap = {};
+        
+        threadsSnapshot.forEach((doc) => {
+            const threadData = doc.data();
+            threadBoardMap[doc.id] = threadData.board;
+            threadPostIdMap[doc.id] = threadData.postId;
+        });
+        
         querySnapshot.forEach((doc) => {
             const reply = doc.data();
             const timestamp = reply.timestamp ? 
                 (reply.timestamp.toDate ? reply.timestamp.toDate() : new Date(reply.timestamp)) 
                 : new Date();
+
+            // Obtener el board y postId del thread padre
+            const replyBoard = threadBoardMap[reply.threadId] || 'unknown';
+            const threadPostId = threadPostIdMap[reply.threadId] || reply.threadId;
 
             // Crear sección de archivo si hay imagen
             const replyFileSection = reply.imageUrl ? `
@@ -184,17 +200,20 @@ window.loadReplies = async () => {
             ` : '';
 
             repliesHTML += `
-                <div class="admin-item">
-                    <div class="admin-item-header">
-                        <span>Respuesta - No.${reply.postId || 'N/A'}</span>
-                        <button onclick="deleteReply('${doc.id}')">Eliminar</button>
-                    </div>
-                    <div class="admin-item-content">
-                        <p><strong>${reply.name || 'Anónimo'}</strong> - ${timestamp.toLocaleString()}</p>
-                        ${replyFileSection}
-                        ${reply.imageUrl ? `<div class="post-image"><img src="${reply.imageUrl}" class="reply-image" onclick="openLightbox(this.src)"></div>` : ''}
-                        <div>${processText(reply.comment)}</div>
-                    </div>
+                <div class="reply-post" data-post-id="${reply.postId}" data-id="${reply.postId}">
+                    ${replyFileSection}
+                        <div class="post-image">
+                            ${reply.imageUrl ? `<img src="${reply.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
+                        </div>
+                        <div class="reply-header">
+                            <span class="subject">/${replyBoard}/</span>
+                            <span class="name">${reply.name || 'Anónimo'}</span>
+                            <span class="date">${timestamp.toLocaleString()}</span>
+                            <span class="id">No.${reply.postId || 'N/A'}</span>
+                            [<a href="reply.html?board=${replyBoard}&thread=${threadPostId}#${reply.postId}">Ver respuesta</a>]
+                            <button class="delete-btn" onclick="deleteReply('${doc.id}')">[Eliminar]</button>
+                        </div>
+                    <div class="comment">${processText(reply.comment)}</div>
                 </div>
             `;
         });

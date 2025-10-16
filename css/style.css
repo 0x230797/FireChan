@@ -207,7 +207,8 @@ a:hover {
     color: #474848;
 }
 
-.thread-header .subject {
+.thread-header .subject,
+.reply-header .subject {
     color: #771111;
     font-weight: bold;
     margin-bottom: 5px;
@@ -459,6 +460,7 @@ a:hover {
 
 .delete-btn {
     color: #d00;
+    background: none;
     border: none;
     cursor: pointer;
     font-weight: bold;
@@ -694,11 +696,19 @@ a:hover {
     text-decoration: underline;
 }
 
-/* Highlight de posts cuando son referenciados */
-.post-highlighted {
-    background-color: #d6bad0 !important;
-    border: 2px solid #d00 !important;
-    transition: all 0.3s ease;
+/* ========== URLS ========== */
+.url-link {
+    color: #34345c !important;
+    text-decoration: underline;
+}
+
+.url-link:hover {
+    color: #d00 !important;
+}
+
+.banned-url {
+    color: #d00 !important;
+    font-weight: bold;
 }
 
 /* ========== TOOLTIPS Y PREVIEWS ========== */
@@ -711,6 +721,7 @@ a:hover {
     padding: 8px;
     font-size: 10pt;
     pointer-events: none;
+    max-width: 400px;
 }
 
 .post-preview-tooltip .post-preview {
@@ -735,6 +746,60 @@ a:hover {
     max-width: 150px;
     max-height: 150px;
     margin-top: 5px;
+}
+
+/* Estilos específicos para estructura de posts en tooltips */
+.post-preview-tooltip .thread-container {
+    margin: 0;
+    background: transparent;
+}
+
+.post-preview-tooltip .thread-op {
+    background-color: #d6daf0;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.post-preview-tooltip .post-header-file {
+    color: #474848;
+    font-size: 9pt;
+    margin-bottom: 5px;
+}
+
+.post-preview-tooltip .post-image {
+    float: left;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.post-preview-tooltip .thread-image {
+    max-width: 100px;
+    max-height: 100px;
+    cursor: pointer;
+}
+
+.post-preview-tooltip .board-indicator {
+    color: #d00;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.post-preview-tooltip .preview-footer {
+    margin-top: 8px;
+    padding-top: 5px;
+    border-top: 1px solid #b7c5d9;
+    text-align: right;
+}
+
+.post-preview-tooltip .preview-footer a {
+    color: #34345c;
+    text-decoration: none;
+    font-size: 8pt;
+}
+
+.post-preview-tooltip .preview-footer a:hover {
+    text-decoration: underline;
 }
 
 /* ========== MEJORAS DE USABILIDAD ========== */
@@ -775,17 +840,6 @@ a:hover {
 
 .backlink a:hover {
     text-decoration: underline;
-}
-
-/* ========== ANIMACIONES ========== */
-@keyframes highlight-flash {
-    0% { background-color: #d6bad0; }
-    50% { background-color: #f0c0d0; }
-    100% { background-color: #d6bad0; }
-}
-
-.post-highlighted {
-    animation: highlight-flash 0.5s ease-in-out;
 }
 
 /* ========== CONTENEDOR DE THREADS CON RESPUESTAS ========== */

@@ -141,6 +141,14 @@ async function loadThreads() {
             const timestamp = thread.timestamp ? 
                 (thread.timestamp.toDate ? thread.timestamp.toDate() : new Date(thread.timestamp)) 
                 : new Date();
+
+            // Contar respuestas reales del thread
+            const repliesQuery = query(
+                collection(db, 'replies'),
+                where('threadId', '==', doc.id)
+            );
+            const repliesSnapshot = await getDocs(repliesQuery);
+            const actualReplyCount = repliesSnapshot.size;
                 
             // Crear sección de archivo si hay imagen
             const fileSection = thread.imageUrl ? `
@@ -152,11 +160,11 @@ async function loadThreads() {
             ` : '';
 
             // Cargar las últimas 5 respuestas de este thread
-            const repliesHTML = await loadLastReplies(doc.id, thread.replyCount, thread.postId);
+            const repliesHTML = await loadLastReplies(doc.id, actualReplyCount, thread.postId);
             
             threadsHTML += `
                 <div class="thread-container">
-                    <div class="thread-op" data-post-id="${thread.postId}" data-id="${thread.postId}">
+                    <div class="thread-op" id="${thread.postId}" data-post-id="${thread.postId}" data-id="${thread.postId}">
                         ${fileSection}
                         <div class="post-image">
                             ${thread.imageUrl ? `<img src="${thread.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
@@ -166,7 +174,7 @@ async function loadThreads() {
                             <span class="name">${thread.name || 'Anónimo'}</span>
                             <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                             <span class="id" onclick="quotePost('${thread.postId || 'N/A'}', '${thread.postId || 'N/A'}')" style="cursor: pointer;" title="Responder a esta publicación">No.${thread.postId || 'N/A'}</span>
-                            [<a href="reply.html?board=${currentBoard}&thread=${thread.postId}">Responder</a> (${thread.replyCount || 0})]
+                            [<a href="reply.html?board=${currentBoard}&thread=${thread.postId}">Responder</a> (${actualReplyCount})]
                             <button class="report-btn" onclick="reportPost('${doc.id}', 'thread', ${thread.postId}, '${encodeURIComponent(thread.name || 'Anónimo')}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">[Reportar]</button>
                         </div>
                         <div class="comment">${processText(thread.comment)}</div>
@@ -425,7 +433,7 @@ async function loadLastReplies(threadId, totalReplies, threadPostId) {
             ` : '';
 
             repliesHTML += `
-                <div class="reply-post reply-preview" data-post-id="${reply.postId}" data-id="${reply.postId}">
+                <div class="reply-post reply-preview" id="${reply.postId}" data-post-id="${reply.postId}" data-id="${reply.postId}">
                     ${replyFileSection}
                     <div class="post-image">
                         ${reply.imageUrl ? `<img src="${reply.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}

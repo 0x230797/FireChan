@@ -205,7 +205,7 @@ function displayThread(thread, id) {
 
     const container = document.getElementById('threadContainer');
     container.innerHTML = `
-        <div class="thread thread-op" data-id="${thread.postId || 'N/A'}" data-post-id="${thread.postId || 'N/A'}">
+        <div class="thread thread-op" id="${thread.postId || 'N/A'}" data-id="${thread.postId || 'N/A'}" data-post-id="${thread.postId || 'N/A'}">
             ${fileSection}
             <div class="post-image">
                 ${thread.imageUrl ? `<img src="${thread.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
@@ -251,7 +251,7 @@ async function loadReplies() {
             ` : '';
 
             repliesHTML += `
-                <div class="reply-post" data-post-id="${reply.postId}" data-id="${reply.postId}">
+                <div class="reply-post" id="${reply.postId}" data-post-id="${reply.postId}" data-id="${reply.postId}">
                     ${replyFileSection}
                     <div class="post-image">
                         ${reply.imageUrl ? `<img src="${reply.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
