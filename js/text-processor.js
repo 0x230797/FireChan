@@ -2,48 +2,47 @@
 export function processText(text) {
     if (!text) return '';
     
-    // Escapar HTML para prevenir XSS
-    const escapeHtml = (str) => {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    };
-    
-    // Función para procesar menciones >>numero
-    const processReferences = (line) => {
-        // Buscar patrones >>numero
-        return line.replace(/&gt;&gt;(\d+)/g, (match, postId) => {
-            return `<span class="post-reference" data-post-id="${postId}" onclick="highlightPost('${postId}')" onmouseover="showPostPreview(event, '${postId}')" onmouseout="hidePostPreview()">&gt;&gt;${postId}</span>`;
-        });
-    };
-    
     // Dividir el texto en líneas
     const lines = text.split('\n');
     
     // Procesar cada línea
     const processedLines = lines.map(line => {
         const trimmedLine = line.trim();
-        let processedLine;
         
-        // Greentext: líneas que empiezan con >
-        if (trimmedLine.startsWith('>') && trimmedLine.length > 1) {
-            processedLine = `<span class="greentext">${escapeHtml(line)}</span>`;
+        // Primero verificar si es una referencia >>numero
+        if (/>>(\d+)/.test(trimmedLine)) {
+            // Procesar referencias sin escapar HTML aún
+            return line.replace(/>>(\d+)/g, (match, postId) => {
+                return `<span class="post-reference" data-post-id="${postId}" onclick="highlightPost('${postId}')" onmouseover="showPostPreview(event, '${postId}')" onmouseout="hidePostPreview()">&gt;&gt;${postId}</span>`;
+            });
+        }
+        // Greentext: líneas que empiezan con > pero NO con >>
+        else if (trimmedLine.startsWith('>') && !trimmedLine.startsWith('>>') && trimmedLine.length > 1) {
+            return `<span class="greentext">${escapeHtml(line)}</span>`;
         }
         // Pinktext: líneas que empiezan con <
         else if (trimmedLine.startsWith('<') && trimmedLine.length > 1) {
-            processedLine = `<span class="pinktext">${escapeHtml(line)}</span>`;
+            return `<span class="pinktext">${escapeHtml(line)}</span>`;
         }
-        // Línea normal
+        // Línea normal - escapar HTML y luego procesar referencias
         else {
-            processedLine = escapeHtml(line);
+            let escapedLine = escapeHtml(line);
+            // Buscar referencias ya escapadas (&gt;&gt;)
+            return escapedLine.replace(/&gt;&gt;(\d+)/g, (match, postId) => {
+                return `<span class="post-reference" data-post-id="${postId}" onclick="highlightPost('${postId}')" onmouseover="showPostPreview(event, '${postId}')" onmouseout="hidePostPreview()">&gt;&gt;${postId}</span>`;
+            });
         }
-        
-        // Procesar referencias en todas las líneas
-        return processReferences(processedLine);
     });
     
     // Unir las líneas con <br>
     return processedLines.join('<br>');
+    
+    // Función local para escapar HTML
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
 }
 
 // Función para procesar texto en elementos existentes

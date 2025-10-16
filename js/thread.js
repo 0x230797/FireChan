@@ -109,8 +109,7 @@ async function uploadImageToImgBB(file) {
         if (!result.success) {
             throw new Error(result.error?.message || 'Error desconocido de ImgBB');
         }
-
-        console.log('Imagen subida exitosamente a ImgBB:', result.data.url);
+        
         return {
             url: result.data.url,
             width: dimensions.width,
@@ -166,11 +165,9 @@ async function loadThreads() {
                             <span class="subject">${thread.subject || ''}</span>
                             <span class="name">${thread.name || 'Anónimo'}</span>
                             <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
-                            <span class="id" onclick="quotePost('${thread.postId || 'N/A'}')" style="cursor: pointer;">No.${thread.postId || 'N/A'}</span>
-                            <a href="reply.html?board=${currentBoard}&thread=${thread.postId}" class="replies-btn">
-                                Responder (${thread.replyCount || 0})
-                            </a>
-                            <button class="report-btn" onclick="reportPost('${doc.id}', 'thread', ${thread.postId}, '${encodeURIComponent(thread.name || 'Anónimo')}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">Reportar</button>
+                            <span class="id" onclick="quotePost('${thread.postId || 'N/A'}')" style="cursor: pointer;" title="Responder a esta publicación">No.${thread.postId || 'N/A'}</span>
+                            [<a href="reply.html?board=${currentBoard}&thread=${thread.postId}">Responder</a> (${thread.replyCount || 0})]
+                            <button class="report-btn" onclick="reportPost('${doc.id}', 'thread', ${thread.postId}, '${encodeURIComponent(thread.name || 'Anónimo')}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">[Reportar]</button>
                         </div>
                         <div class="comment">${processText(thread.comment)}</div>
                     </div>
@@ -250,7 +247,6 @@ window.submitThread = async () => {
             replyCount: 0
         });
 
-        console.log('Thread creado exitosamente');
         alert('Thread creado exitosamente!');
 
         // Limpiar formulario
@@ -371,35 +367,50 @@ async function loadLastReplies(threadId, totalReplies, threadPostId) {
         );
         
         const querySnapshot = await getDocs(q);
-        const replies = [];
+        const allReplies = [];
+        const displayedReplies = [];
         
-        // Tomar solo las últimas 5 respuestas
+        // Obtener todas las respuestas y separar las que se mostrarán
         let count = 0;
         querySnapshot.forEach((doc) => {
+            const replyData = doc.data();
+            allReplies.push(replyData);
+            
             if (count < 5) {
-                replies.push(doc.data());
+                displayedReplies.push(replyData);
                 count++;
             }
         });
         
-        // Invertir el array para mostrar en orden cronológico
-        replies.reverse();
+        // Invertir el array de respuestas mostradas para orden cronológico
+        displayedReplies.reverse();
         
         let repliesHTML = '';
         
         // Agregar indicador si hay más respuestas
         if (totalReplies > 5) {
             const omittedCount = totalReplies - 5;
+            
+            // Contar imágenes en las respuestas omitidas
+            const omittedReplies = allReplies.slice(5); // Las respuestas que no se muestran
+            const omittedImagesCount = omittedReplies.filter(reply => reply.imageUrl).length;
+            
+            let imagesText = '';
+            if (omittedImagesCount > 0) {
+                imagesText = ` y ${omittedImagesCount} imagen${omittedImagesCount > 1 ? 'es' : ''}`;
+            }
+            
             repliesHTML += `
                 <div class="omitted-replies">
-                    <em>${omittedCount} respuesta${omittedCount > 1 ? 's' : ''} omitida${omittedCount > 1 ? 's' : ''}. 
-                    <a href="reply.html?board=${currentBoard}&thread=${threadPostId}">Ver thread completo</a></em>
+                    <em>${omittedCount} respuesta${omittedCount > 1 ? 's' : ''} ${imagesText} omitida${omittedCount > 1 ? 's' : ''}. 
+                        <a href="reply.html?board=${currentBoard}&thread=${threadPostId}">Click aquí</a> para ver todas.
+                    </em>
                 </div>
             `;
         }
         
-        // Generar HTML para cada respuesta
-        replies.forEach((reply) => {
+        // Generar HTML para cada respuesta mostrada
+        displayedReplies.forEach((reply) => {
             const timestamp = reply.timestamp ? 
                 (reply.timestamp.toDate ? reply.timestamp.toDate() : new Date(reply.timestamp)) 
                 : new Date();
@@ -423,7 +434,7 @@ async function loadLastReplies(threadId, totalReplies, threadPostId) {
                         <span class="name">${reply.name || 'Anónimo'}</span>
                         <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                         <span class="id" onclick="quotePost('${reply.postId || 'N/A'}')" style="cursor: pointer;">No.${reply.postId || 'N/A'}</span>
-                        <button class="report-btn" onclick="reportPost('${threadId}', 'reply', ${reply.postId}, '${encodeURIComponent(reply.name || 'Anónimo')}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>
+                        [<button class="report-btn" onclick="reportPost('${threadId}', 'reply', ${reply.postId}, '${encodeURIComponent(reply.name || 'Anónimo')}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
                     </div>
                     <div class="comment">${processText(reply.comment)}</div>
                 </div>
