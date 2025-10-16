@@ -290,38 +290,110 @@ window.loadReports = async () => {
         const querySnapshot = await getDocs(q);
         let reportsHTML = '';
         
+        // Obtener información de todos los threads para mapear threadId -> postId
+        const threadsQuery = query(collection(db, 'threads'));
+        const threadsSnapshot = await getDocs(threadsQuery);
+        const threadPostIdMap = {};
+        
+        threadsSnapshot.forEach((doc) => {
+            const threadData = doc.data();
+            threadPostIdMap[doc.id] = threadData.postId;
+        });
+
+        // Obtener información de todas las respuestas para mapear replyId -> threadId
+        const repliesQuery = query(collection(db, 'replies'));
+        const repliesSnapshot = await getDocs(repliesQuery);
+        const replyThreadMap = {};
+        
+        repliesSnapshot.forEach((doc) => {
+            const replyData = doc.data();
+            replyThreadMap[doc.id] = replyData.threadId;
+        });
+        
         querySnapshot.forEach((doc) => {
             const report = doc.data();
             const timestamp = report.timestamp ? 
                 (report.timestamp.toDate ? report.timestamp.toDate() : new Date(report.timestamp)) 
                 : new Date();
 
+            // Debug: mostrar información del reporte y mapas
+            console.log('=== PROCESANDO REPORTE ===');
+            console.log('Reporte:', report);
+            console.log('ContentId:', report.contentId);
+            console.log('ThreadId en reporte:', report.threadId);
+            console.log('ThreadId desde reply map:', replyThreadMap[report.contentId]);
+            console.log('ReplyThreadMap completo:', replyThreadMap);
+            console.log('ThreadPostIdMap completo:', threadPostIdMap);
+
+            // Crear sección de archivo si hay imagen
+            const reportFileSection = report.imageUrl ? `
+                <div class="post-header-file">
+                    <b>Archivo:</b>
+                    <a href="${report.imageUrl}" target="_blank" title="${report.fileName || 'imagen.jpg'}">${report.fileName || 'imagen.jpg'}</a>
+                    ${report.fileSize ? `(${formatFileSize(report.fileSize)}${report.imageWidth && report.imageHeight ? `, ${report.imageWidth}x${report.imageHeight}` : ''})` : ''}
+                </div>
+            ` : '';
+
+            // Construir URL correcta según el tipo de contenido
+            let contentUrl;
+            if (report.contentType === 'thread') {
+                // Para threads, usar el postId del thread reportado
+                contentUrl = `reply.html?board=${report.board}&thread=${report.postId}`;
+            } else {
+                // Para respuestas, buscar el threadId correcto
+                let actualThreadId = report.threadId;
+                let threadPostId;
+                
+                // Si threadId es undefined, buscar en el mapa de respuestas
+                if (!actualThreadId && report.contentId) {
+                    actualThreadId = replyThreadMap[report.contentId];
+                }
+                
+                // Si aún no tenemos threadId, verificar si contentId es en realidad un threadId
+                if (!actualThreadId && report.contentId) {
+                    // Verificar si contentId existe en threadPostIdMap (es decir, si es un thread)
+                    threadPostId = threadPostIdMap[report.contentId];
+                    if (threadPostId) {
+                        console.log('ContentId es en realidad un threadId:', report.contentId);
+                        actualThreadId = report.contentId;
+                    }
+                }
+                
+                // Si no obtuvimos threadPostId arriba, intentar obtenerlo normalmente
+                if (!threadPostId && actualThreadId) {
+                    threadPostId = threadPostIdMap[actualThreadId];
+                }
+                
+                if (threadPostId) {
+                    contentUrl = `reply.html?board=${report.board}&thread=${threadPostId}#${report.postId}`;
+                } else {
+                    // Fallback: usar el threadId directamente si no se encuentra el postId
+                    contentUrl = `reply.html?board=${report.board}&thread=${actualThreadId || 'unknown'}#${report.postId}`;
+                }
+                
+                console.log('URL construida:', contentUrl);
+            }
+
             reportsHTML += `
-                <div class="admin-item report-item">
-                    <div class="admin-item-header">
-                        <span>Reporte - ${report.contentType === 'thread' ? 'Thread' : 'Respuesta'} No.${report.postId || 'N/A'}</span>
-                        <div>
-                            <button onclick="dismissReport('${doc.id}')">Descartar</button>
-                            <button onclick="deleteReportedContent('${report.contentId}', '${report.contentType}', '${doc.id}')">Eliminar Contenido</button>
+                <div class="report-container">
+                    <div class="report-post">
+                        ${reportFileSection}
+                        <div class="post-image">
+                            ${report.imageUrl ? `<img src="${report.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
                         </div>
-                    </div>
-                    <div class="admin-item-content">
-                        <p><strong>Razón:</strong> ${report.reason}</p>
-                        <p><strong>Reportado el:</strong> ${timestamp.toLocaleString()}</p>
-                        <p><strong>Tablón:</strong> /${report.board}/</p>
-                        <div class="reported-content">
+                        <div class="report-header">
+                            <span class="subject">/${report.board}/ - Reporte ${report.contentType === 'thread' ? 'Publicación' : 'Respuesta'}</span>
+                            <span class="name">${report.name || 'Anónimo'}</span>
+                            <span class="date">${timestamp.toLocaleString()}</span>
+                            <span class="id">No.${report.postId || 'N/A'}</span>
+                            [<a href="${contentUrl}">Ver contenido</a>]
+                            <button class="delete-btn" onclick="dismissReport('${doc.id}')">[Descartar]</button>
+                            <button class="delete-btn" onclick="deleteReportedContent('${report.contentId}', '${report.contentType}', '${doc.id}')">[Eliminar Contenido]</button>
+                        </div>
+                        <div class="comment">
+                            <p><strong>Razón del reporte:</strong> ${report.reason}</p>
                             <p><strong>Contenido reportado:</strong></p>
-                            <div><em>${report.name || 'Anónimo'}</em>: ${processText(report.comment)}</div>
-                            ${report.imageUrl ? `
-                                <div class="post-header-file">
-                                    <b>Archivo:</b>
-                                    <a href="${report.imageUrl}" target="_blank" title="${report.fileName || 'imagen.jpg'}">${report.fileName || 'imagen.jpg'}</a>
-                                    ${report.fileSize ? `(${formatFileSize(report.fileSize)}${report.imageWidth && report.imageHeight ? `, ${report.imageWidth}x${report.imageHeight}` : ''})` : ''}
-                                </div>
-                                <div class="post-image">
-                                    <img src="${report.imageUrl}" class="reported-image" onclick="openLightbox(this.src)" style="max-width: 200px; cursor: pointer;">
-                                </div>
-                            ` : ''}
+                            <div>${processText(report.comment)}</div>
                         </div>
                     </div>
                 </div>

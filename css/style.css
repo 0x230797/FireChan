@@ -194,7 +194,8 @@ a:hover {
     background-color: #c5cfe0;
 }
 
-.reply-post {
+.reply-post,
+.report-container {
     background-color: #d6daf0;
     border: 1px solid #b7c5d9;
     overflow: auto;
@@ -208,7 +209,8 @@ a:hover {
 }
 
 .thread-header .subject,
-.reply-header .subject {
+.reply-header .subject,
+.report-header .subject {
     color: #771111;
     font-weight: bold;
     margin-bottom: 5px;
@@ -219,19 +221,22 @@ a:hover {
 }
 
 .thread-header .name,
-.reply-header .name {
+.reply-header .name,
+.report-header .name {
     color: #117743;
     font-weight: 600;
 }
 
 .thread-header .date,
-.reply-header .date {
+.reply-header .date,
+.report-header .date {
     color: #000;
     font-weight: normal;
 }
 
 .thread-header .id,
-.reply-header .id {
+.reply-header .id,
+.report-header .id {
     color: #000;
     font-weight: normal;
 }

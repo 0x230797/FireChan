@@ -273,21 +273,23 @@ window.submitThread = async () => {
 
 function updateBoardTitle() {
     const boardTitles = {
-        'b': 'Random',
+        'a': 'Anime y Manga',
+        'b': 'Aleatorio',
         'g': 'Tecnología',
         'v': 'Videojuegos',
-        'a': 'Anime & Manga',
         'pol': 'Política',
-        'x': 'Paranormal'
+        'x': 'Paranormal',
+        'me': 'Meta'
     };
 
     const boardDescriptions = {
+        'a': 'Anime, manga y cultura japonesa',
         'b': 'Conversaciones aleatorias y contenido variado',
         'g': 'Discusiones sobre tecnología, programación y gadgets',
         'v': 'Todo sobre videojuegos y gaming',
-        'a': 'Anime, manga y cultura japonesa',
         'pol': 'Política y actualidad',
-        'x': 'Temas paranormales y misterios'
+        'x': 'Temas paranormales y misterios',
+        'me': 'Sugerencias, dudas y comentarios sobre el sitio'
     };
 
     document.getElementById('boardTitle').textContent = `/${currentBoard}/ - ${boardTitles[currentBoard] || ''}`;
