@@ -63,8 +63,6 @@
                         <option value="g">Technology (/g/)</option>
                         <option value="v">Video Games (/v/)</option>
                         <option value="a">Anime & Manga (/a/)</option>
-                        <option value="fit">Fitness (/fit/)</option>
-                        <option value="mu">Music (/mu/)</option>
                         <option value="pol">Politics (/pol/)</option>
                         <option value="x">Paranormal (/x/)</option>
                     </select>
@@ -72,7 +70,7 @@
                     <button onclick="loadThreads()">Actualizar</button>
                 </div>
 
-                <div id="threadsContainer" class="content-list loading">
+                <div id="threadsContainer" class="loading">
                     Cargando threads...
                 </div>
             </div>
@@ -82,7 +80,7 @@
                     <button onclick="loadReplies()">Actualizar Respuestas</button>
                 </div>
 
-                <div id="repliesContainer" class="content-list loading">
+                <div id="repliesContainer" class="loading">
                     Cargando respuestas...
                 </div>
             </div>
@@ -93,11 +91,15 @@
                     <button onclick="clearAllReports()">Limpiar Todos</button>
                 </div>
 
-                <div id="reportsContainer" class="content-list loading">
+                <div id="reportsContainer" class="loading">
                     Cargando reportes...
                 </div>
             </div>
         </div>
+    </div>
+
+    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+        <img id="lightboxImg" src="" alt="">
     </div>
 
     <script type="module" src="js/admin.js"></script>

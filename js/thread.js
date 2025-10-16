@@ -165,7 +165,7 @@ async function loadThreads() {
                             <span class="subject">${thread.subject || ''}</span>
                             <span class="name">${thread.name || 'Anónimo'}</span>
                             <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
-                            <span class="id" onclick="quotePost('${thread.postId || 'N/A'}')" style="cursor: pointer;" title="Responder a esta publicación">No.${thread.postId || 'N/A'}</span>
+                            <span class="id" onclick="quotePost('${thread.postId || 'N/A'}', '${thread.postId || 'N/A'}')" style="cursor: pointer;" title="Responder a esta publicación">No.${thread.postId || 'N/A'}</span>
                             [<a href="reply.html?board=${currentBoard}&thread=${thread.postId}">Responder</a> (${thread.replyCount || 0})]
                             <button class="report-btn" onclick="reportPost('${doc.id}', 'thread', ${thread.postId}, '${encodeURIComponent(thread.name || 'Anónimo')}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">[Reportar]</button>
                         </div>
@@ -433,7 +433,7 @@ async function loadLastReplies(threadId, totalReplies, threadPostId) {
                     <div class="reply-header">
                         <span class="name">${reply.name || 'Anónimo'}</span>
                         <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
-                        <span class="id" onclick="quotePost('${reply.postId || 'N/A'}')" style="cursor: pointer;">No.${reply.postId || 'N/A'}</span>
+                        <span class="id" onclick="quotePost('${reply.postId || 'N/A'}', '${threadPostId}')" style="cursor: pointer;">No.${reply.postId || 'N/A'}</span>
                         [<button class="report-btn" onclick="reportPost('${threadId}', 'reply', ${reply.postId}, '${encodeURIComponent(reply.name || 'Anónimo')}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
                     </div>
                     <div class="comment">${processText(reply.comment)}</div>

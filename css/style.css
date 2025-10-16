@@ -102,6 +102,7 @@ a:hover {
 
 .board-card:hover {
     background-color: #c5cfe0;
+    text-decoration: none;
 }
 
 .board-title {
@@ -163,19 +164,23 @@ a:hover {
 }
 
 .post-form button {
-    background-color: #d6daf0;
-    border: 1px solid #b7c5d9;
-    padding: 5px 15px;
+    background-color: #d4d3ff;
+    border: 1px solid #0f0c5d;
+    color: #0f0c5d;
+    padding: 5px 10px;
     cursor: pointer;
-    font-weight: bold;
-    margin-top: 5px;
 }
 
 .post-form button:hover {
-    background-color: #c5cfe0;
+    background-color: #b8b7f6;
 }
 
 /* ========== THREADS Y POSTS ========== */
+.thread-container,
+.thread-op {
+    margin-bottom: 10px;
+    overflow: auto;
+}
 .thread-preview {
     background-color: #d6daf0;
     border: 1px solid #b7c5d9;
@@ -189,12 +194,7 @@ a:hover {
     background-color: #c5cfe0;
 }
 
-.thread-op {
-    margin-bottom: 10px;
-}
-
 .reply-post {
-    display: table;
     background-color: #d6daf0;
     border: 1px solid #b7c5d9;
     overflow: auto;
@@ -458,16 +458,10 @@ a:hover {
 }
 
 .delete-btn {
-    background-color: #d00;
-    color: #fff;
+    color: #d00;
     border: none;
-    padding: 5px 15px;
     cursor: pointer;
     font-weight: bold;
-}
-
-.delete-btn:hover {
-    background-color: #a00;
 }
 
 .tabs {
@@ -504,6 +498,7 @@ a:hover {
 /* ========== UTILIDADES ========== */
 .loading {
     color: #666;
+    margin-bottom: 10px;
 }
 
 .hidden {

@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupNavigation() {
-    const backLinks = document.querySelectorAll('#backToBoard, #backLink');
+    const backLinks = document.querySelectorAll('#backLink');
     backLinks.forEach(link => {
         link.href = `thread.html?board=${currentBoard}`;
     });
@@ -214,7 +214,7 @@ function displayThread(thread, id) {
                 <span class="subject">${thread.subject || ''}</span>
                 <span class="name">${thread.name || 'Anónimo'}</span>
                 <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
-                <span class="id" onclick="quotePost('${thread.postId || 'N/A'}')" style="cursor: pointer;">No.${thread.postId || 'N/A'}</span>
+                <span class="id" onclick="quotePost('${thread.postId || 'N/A'}', '${thread.postId || 'N/A'}')" style="cursor: pointer;">No.${thread.postId || 'N/A'}</span>
             </div>
             <div class="comment">${processText(thread.comment)}</div>
         </div>
@@ -259,7 +259,7 @@ async function loadReplies() {
                     <div class="reply-header">
                         <span class="name">${reply.name || 'Anónimo'}</span>
                         <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
-                        <span class="id" onclick="quotePost('${reply.postId || 'N/A'}')" style="cursor: pointer;">No.${reply.postId || 'N/A'}</span>
+                        <span class="id" onclick="quotePost('${reply.postId || 'N/A'}', '${threadId}')" style="cursor: pointer;">No.${reply.postId || 'N/A'}</span>
                         <button class="report-btn" onclick="reportPost('${doc.id}', 'reply', ${reply.postId}, '${encodeURIComponent(reply.name || 'Anónimo')}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>
                     </div>
                     <div class="comment">${processText(reply.comment)}</div>

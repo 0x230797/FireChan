@@ -3,6 +3,15 @@ import { collection, query, where, orderBy, getDocs, deleteDoc, doc } from "http
 import { adminConfig } from './config.js';
 import { processText } from './text-processor.js';
 
+// Función para formatear el tamaño del archivo
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthState();
 });
@@ -113,15 +122,31 @@ window.loadThreads = async () => {
                 (thread.timestamp.toDate ? thread.timestamp.toDate() : new Date(thread.timestamp)) 
                 : new Date();
 
+            // Crear sección de archivo si hay imagen
+            const fileSection = thread.imageUrl ? `
+                <div class="post-header-file">
+                    <b>Archivo:</b>
+                    <a href="${thread.imageUrl}" target="_blank" title="${thread.fileName || 'imagen.jpg'}">${thread.fileName || 'imagen.jpg'}</a>
+                    ${thread.fileSize ? `(${formatFileSize(thread.fileSize)}${thread.imageWidth && thread.imageHeight ? `, ${thread.imageWidth}x${thread.imageHeight}` : ''})` : ''}
+                </div>
+            ` : '';
+
             threadsHTML += `
-                <div class="admin-item">
-                    <div class="admin-item-header">
-                        <span>/${thread.board}/ - ${thread.subject || 'Sin título'} - No.${thread.postId || 'N/A'}</span>
-                        <button onclick="deleteThread('${doc.id}')">Eliminar</button>
-                    </div>
-                    <div class="admin-item-content">
-                        <p><strong>${thread.name || 'Anónimo'}</strong> - ${timestamp.toLocaleString()}</p>
-                        <div>${processText(thread.comment)}</div>
+                <div class="thread-container">
+                    <div class="thread-op">
+                        ${fileSection}
+                        <div class="post-image">
+                            ${thread.imageUrl ? `<img src="${thread.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
+                        </div>
+                        <div class="thread-header">
+                            <span class="subject">/${thread.board}/ - ${thread.subject || ''}</span>
+                            <span class="name">${thread.name || 'Anónimo'}</span>
+                            <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
+                            <span class="id">No.${thread.postId || 'N/A'}</span>
+                            [<a href="reply.html?board=${thread.board}&thread=${thread.postId}">Ver publicación</a>]
+                            <button class="delete-btn" onclick="deleteThread('${doc.id}')">[Eliminar]</button>
+                        </div>
+                        <div class="comment">${processText(thread.comment)}</div>
                     </div>
                 </div>
             `;
@@ -149,6 +174,15 @@ window.loadReplies = async () => {
                 (reply.timestamp.toDate ? reply.timestamp.toDate() : new Date(reply.timestamp)) 
                 : new Date();
 
+            // Crear sección de archivo si hay imagen
+            const replyFileSection = reply.imageUrl ? `
+                <div class="post-header-file">
+                    <b>Archivo:</b>
+                    <a href="${reply.imageUrl}" target="_blank" title="${reply.fileName || 'imagen.jpg'}">${reply.fileName || 'imagen.jpg'}</a>
+                    ${reply.fileSize ? `(${formatFileSize(reply.fileSize)}${reply.imageWidth && reply.imageHeight ? `, ${reply.imageWidth}x${reply.imageHeight}` : ''})` : ''}
+                </div>
+            ` : '';
+
             repliesHTML += `
                 <div class="admin-item">
                     <div class="admin-item-header">
@@ -157,6 +191,8 @@ window.loadReplies = async () => {
                     </div>
                     <div class="admin-item-content">
                         <p><strong>${reply.name || 'Anónimo'}</strong> - ${timestamp.toLocaleString()}</p>
+                        ${replyFileSection}
+                        ${reply.imageUrl ? `<div class="post-image"><img src="${reply.imageUrl}" class="reply-image" onclick="openLightbox(this.src)"></div>` : ''}
                         <div>${processText(reply.comment)}</div>
                     </div>
                 </div>
@@ -257,7 +293,16 @@ window.loadReports = async () => {
                         <div class="reported-content">
                             <p><strong>Contenido reportado:</strong></p>
                             <div><em>${report.name || 'Anónimo'}</em>: ${processText(report.comment)}</div>
-                            ${report.imageUrl ? `<p><a href="${report.imageUrl}" target="_blank">Ver imagen</a></p>` : ''}
+                            ${report.imageUrl ? `
+                                <div class="post-header-file">
+                                    <b>Archivo:</b>
+                                    <a href="${report.imageUrl}" target="_blank" title="${report.fileName || 'imagen.jpg'}">${report.fileName || 'imagen.jpg'}</a>
+                                    ${report.fileSize ? `(${formatFileSize(report.fileSize)}${report.imageWidth && report.imageHeight ? `, ${report.imageWidth}x${report.imageHeight}` : ''})` : ''}
+                                </div>
+                                <div class="post-image">
+                                    <img src="${report.imageUrl}" class="reported-image" onclick="openLightbox(this.src)" style="max-width: 200px; cursor: pointer;">
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -323,4 +368,14 @@ window.clearAllReports = async () => {
     } catch (error) {
         alert('Error al eliminar reportes: ' + error.message);
     }
+};
+
+// Funciones para el lightbox de imágenes
+window.openLightbox = (src) => {
+    document.getElementById('lightbox').style.display = 'flex';
+    document.getElementById('lightboxImg').src = src;
+};
+
+window.closeLightbox = () => {
+    document.getElementById('lightbox').style.display = 'none';
 };
