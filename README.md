@@ -1,8 +1,8 @@
-# FireChan 🔥
+# FireChan
 
 FireChan es un imageboard estilo 4chan/2chan desarrollado con tecnologías web modernas. Permite a los usuarios crear tablones temáticos, publicar threads, responder con imágenes y texto, todo almacenado en Firebase.
 
-## 🌟 Características
+## Características
 
 - **Múltiples tablones temáticos**: Anime, Tecnología, Videojuegos, Política, Paranormal y más
 - **Sistema de threads y respuestas**: Publica contenido y responde a otros usuarios
@@ -13,14 +13,14 @@ FireChan es un imageboard estilo 4chan/2chan desarrollado con tecnologías web m
 - **Diseño responsive**: Funciona en dispositivos móviles y escritorio
 - **Lightbox para imágenes**: Visualiza imágenes en pantalla completa
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 - HTML5, CSS3, JavaScript (ES6+)
 - Firebase Firestore (Base de datos)
 - ImgBB API (Almacenamiento de imágenes)
 - Diseño inspirado en imageboards clásicos
 
-## 📋 Requisitos Previos
+## Requisitos Previos
 
 Antes de comenzar, necesitas:
 
@@ -28,7 +28,7 @@ Antes de comenzar, necesitas:
 2. Una API key de [ImgBB](https://api.imgbb.com/) (gratuita)
 3. Un servidor web local o hosting web
 
-## 🚀 Instalación y Configuración
+## Instalación y Configuración
 
 ### 1. Clonar el Repositorio
 
@@ -94,7 +94,7 @@ export const adminConfig = {
 };
 ```
 
-⚠️ **Importante**: Estas credenciales se almacenan en el cliente. Para producción, considera implementar Firebase Authentication.
+**Importante**: Estas credenciales se almacenan en el cliente. Para producción, considera implementar Firebase Authentication.
 
 ### 5. Desplegar el Sitio
 
@@ -117,7 +117,7 @@ Puedes desplegar en:
 - **Netlify/Vercel**: Conecta tu repositorio de GitHub
 - Cualquier hosting web estático
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 FireChan/
@@ -138,7 +138,7 @@ FireChan/
 └── README.md
 ```
 
-## 🎮 Uso
+## Uso
 
 ### Para Usuarios
 
@@ -153,7 +153,7 @@ FireChan/
 2. Inicia sesión con las credenciales configuradas
 3. Gestiona threads, respuestas y reportes desde el panel
 
-## 🎨 Personalización
+## Personalización
 
 ### Modificar Tablones
 
@@ -170,7 +170,7 @@ Edita los archivos HTML (`index.html`, `thread.html`, etc.) para agregar o quita
 
 Modifica `css/style.css` para personalizar colores, fuentes y diseño.
 
-## 🔒 Seguridad
+## Seguridad
 
 - Las credenciales de admin actuales son básicas y solo para desarrollo
 - Para producción, implementa autenticación real con Firebase Auth
@@ -178,7 +178,7 @@ Modifica `css/style.css` para personalizar colores, fuentes y diseño.
 - Valida y sanitiza todo el input del usuario
 - Considera implementar CAPTCHA para prevenir spam
 
-## 📝 Reglas de Firestore Recomendadas
+## Reglas de Firestore Recomendadas
 
 ```javascript
 rules_version = '2';
@@ -196,7 +196,7 @@ service cloud.firestore {
 }
 ```
 
-## 🤝 Contribuciones
+## Contribuciones
 
 Las contribuciones son bienvenidas. Por favor:
 
@@ -206,15 +206,15 @@ Las contribuciones son bienvenidas. Por favor:
 4. Push a la rama (`git push origin feature/NuevaCaracteristica`)
 5. Abre un Pull Request
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto es de código abierto y está disponible bajo los términos que definas.
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 Todo el contenido publicado es ficticio y se proporciona únicamente con fines de entretenimiento. Los administradores del sitio no son responsables del contenido generado por los usuarios.
 
-## 📞 Soporte
+## Soporte
 
 Si tienes problemas o sugerencias, usa el tablón `/me/ Meta` dentro de la aplicación o abre un issue en GitHub.
 
