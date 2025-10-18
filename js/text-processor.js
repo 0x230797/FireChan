@@ -66,6 +66,41 @@ function processUrls(text) {
     return parts.join('');
 }
 
+// Función para procesar solo referencias (sin URLs)
+function processReferences(text, inheritColor = false) {
+    let processedText = text;
+    const colorStyle = inheritColor ? 'color: inherit;' : '';
+    
+    console.log('Processing references for:', text); // Debug log
+    
+    // Primero procesar referencias cross-board con ID (ej: >>/b/123)
+    processedText = processedText.replace(/>>\/([\w]+)\/(\d+)/g, (match, board, postId) => {
+        console.log('Found cross-board with ID:', match); // Debug log
+        return `<span class="post-reference cross-board" data-post-id="${postId}" data-board="${board}" onclick="highlightPost('${postId}', '${board}')" onmouseover="showPostPreview(event, '${postId}', '${board}')" onmouseout="hidePostPreview()">&gt;&gt;/${board}/${postId}</span>`;
+    });
+    
+    // Luego procesar referencias a boards sin ID (ej: >>/b/)
+    processedText = processedText.replace(/>>\/([\w]+)\/$/g, (match, board) => {
+        console.log('Found board reference:', match); // Debug log
+        return `<span class="board-reference" data-board="${board}" onclick="navigateToBoard('${board}')">&gt;&gt;/${board}/</span>`;
+    });
+    
+    // También procesar referencias a boards que están seguidas de espacios o al final de línea
+    processedText = processedText.replace(/>>\/([\w]+)\/(?=\s|$)/g, (match, board) => {
+        console.log('Found board reference (with space/end):', match); // Debug log
+        return `<span class="board-reference" data-board="${board}" onclick="navigateToBoard('${board}')">&gt;&gt;/${board}/</span>`;
+    });
+    
+    // Finalmente procesar referencias locales (ej: >>123)
+    processedText = processedText.replace(/>>(\d+)(?![\/\w])/g, (match, postId) => {
+        console.log('Found local reference:', match); // Debug log
+        return `<span class="post-reference" data-post-id="${postId}" onclick="highlightPost('${postId}')" onmouseover="showPostPreview(event, '${postId}')" onmouseout="hidePostPreview()">&gt;&gt;${postId}</span>`;
+    });
+    
+    console.log('Result after processing references:', processedText); // Debug log
+    return processedText;
+}
+
 // Función para procesar URLs sin convertirlas en enlaces (solo para greentext y pinktext)
 function processUrlsAsText(text) {
     const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+|(?:www\.)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}(?:\/[^\s<>"{}|\\^`\[\]]*)?)/gi;
@@ -122,14 +157,9 @@ export function processText(text) {
     const processedLines = lines.map(line => {
         const trimmedLine = line.trim();
         
-        if (/>>(\d+)/.test(trimmedLine) || />>\/([\w]+)\/(\d+)/.test(trimmedLine)) {
-            let processedLine = line.replace(/>>\/([\w]+)\/(\d+)/g, (match, board, postId) => {
-                return `<span class="post-reference cross-board" data-post-id="${postId}" data-board="${board}" onclick="highlightPost('${postId}', '${board}')" onmouseover="showPostPreview(event, '${postId}', '${board}')" onmouseout="hidePostPreview()">&gt;&gt;/${board}/${postId}</span>`;
-            });
-            
-            processedLine = processedLine.replace(/>>(\d+)(?![\/\w])/g, (match, postId) => {
-                return `<span class="post-reference" data-post-id="${postId}" onclick="highlightPost('${postId}')" onmouseover="showPostPreview(event, '${postId}')" onmouseout="hidePostPreview()">&gt;&gt;${postId}</span>`;
-            });
+        if (/>>(\d+)/.test(trimmedLine) || />>\/([\w]+)\//.test(trimmedLine)) {
+            // Procesar referencias primero
+            let processedLine = processReferences(line, false);
             
             return processedLine.replace(/([^>]|^)(https?:\/\/[^\s<>"{}|\\^`\[\]]+|(?:www\.)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}(?:\/[^\s<>"{}|\\^`\[\]]*)?)/gi, (fullMatch, prefix, url) => {
                 let processedUrl = url.trim();
@@ -157,18 +187,19 @@ export function processText(text) {
             });
         }
         else if (trimmedLine.startsWith('>') && !trimmedLine.startsWith('>>') && trimmedLine.length > 1) {
-            let urlProcessedLine = processUrlsAsText(line);
-            return `<span class="greentext">${urlProcessedLine}</span>`;
+            let processedLine = processUrlsAsText(line);
+            processedLine = processReferences(processedLine, true);
+            return `<span class="greentext">${processedLine}</span>`;
         }
         else if (trimmedLine.startsWith('<') && trimmedLine.length > 1) {
-            let urlProcessedLine = processUrlsAsText(line);
-            return `<span class="pinktext">${urlProcessedLine}</span>`;
+            let processedLine = processUrlsAsText(line);
+            processedLine = processReferences(processedLine, true);
+            return `<span class="pinktext">${processedLine}</span>`;
         }
         else {
-            let urlProcessedLine = processUrls(line);
-            return urlProcessedLine.replace(/&gt;&gt;(\d+)/g, (match, postId) => {
-                return `<span class="post-reference" data-post-id="${postId}" onclick="highlightPost('${postId}')" onmouseover="showPostPreview(event, '${postId}')" onmouseout="hidePostPreview()">&gt;&gt;${postId}</span>`;
-            });
+            // Procesar referencias primero, luego URLs
+            let processedLine = processReferences(line, false);
+            return processUrls(processedLine);
         }
     });
     
@@ -288,6 +319,12 @@ async function navigateToPost(board, postId) {
         return false;
     }
 }
+
+// Función para navegar a un board específico
+window.navigateToBoard = (board) => {
+    console.log(`Navegando al board: /${board}/`);
+    window.location.href = `thread.html?board=${encodeURIComponent(board)}`;
+};
 
 // Funciones globales para manejo de referencias
 window.highlightPost = async (postId, board = null) => {

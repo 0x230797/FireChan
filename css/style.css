@@ -290,6 +290,15 @@ a:active, a:hover {
     color: var(--accent-hover);
 }
 
+.board-reference {
+    color: #0f0c5d;
+    cursor: pointer;
+}
+
+.board-reference:hover {
+    color: var(--accent-hover);
+}
+
 .url-link {
     color: var(--text-dark);
 }
