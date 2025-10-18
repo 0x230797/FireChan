@@ -1,5 +1,5 @@
 export const adminConfig = {
-    email: "admin@firechan.com",
+    email: "admin@firechan.org",  // Cambia esto por el correo electrónico del administrador
     password: "admin123"  // Cambia esto por una contraseña más segura
 };
 

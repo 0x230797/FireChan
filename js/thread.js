@@ -175,7 +175,7 @@ async function loadThreads() {
                             <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                             <span class="id" onclick="quotePost('${thread.postId || 'N/A'}', '${thread.postId || 'N/A'}')" style="cursor: pointer;" title="Responder a esta publicación">No.${thread.postId || 'N/A'}</span>
                             [<a href="reply.html?board=${currentBoard}&thread=${thread.postId}">Responder</a> (${actualReplyCount})]
-                            <button class="report-btn" onclick="reportPost('${doc.id}', 'thread', ${thread.postId}, '${encodeURIComponent(thread.name || 'Anónimo')}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">[Reportar]</button>
+                            [<button class="report-btn" onclick="reportPost('${doc.id}', 'thread', ${thread.postId}, '${encodeURIComponent(thread.name || 'Anónimo')}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
                         </div>
                         <div class="comment">${processText(thread.comment)}</div>
                     </div>

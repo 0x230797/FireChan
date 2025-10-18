@@ -215,6 +215,7 @@ function displayThread(thread, id) {
                 <span class="name">${thread.name || 'Anónimo'}</span>
                 <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                 <span class="id" onclick="quotePost('${thread.postId || 'N/A'}', '${thread.postId || 'N/A'}')" style="cursor: pointer;">No.${thread.postId || 'N/A'}</span>
+                [<button class="report-btn" onclick="reportPost('${doc.id}', 'reply', ${thread.postId}, '${encodeURIComponent(thread.name || 'Anónimo')}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
             </div>
             <div class="comment">${processText(thread.comment)}</div>
         </div>
@@ -260,7 +261,7 @@ async function loadReplies() {
                         <span class="name">${reply.name || 'Anónimo'}</span>
                         <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                         <span class="id" onclick="quotePost('${reply.postId || 'N/A'}', '${threadId}')" style="cursor: pointer;">No.${reply.postId || 'N/A'}</span>
-                        <button class="report-btn" onclick="reportPost('${doc.id}', 'reply', ${reply.postId}, '${encodeURIComponent(reply.name || 'Anónimo')}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>
+                        [<button class="report-btn" onclick="reportPost('${doc.id}', 'reply', ${reply.postId}, '${encodeURIComponent(reply.name || 'Anónimo')}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
                     </div>
                     <div class="comment">${processText(reply.comment)}</div>
                 </div>

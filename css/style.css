@@ -1,79 +1,73 @@
-/* ========== RESET Y ESTILOS GENERALES ========== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* ========== VARIABLES DE COLOR ========== */
+:root {
+    --primary-bg: #d6daf0;
+    --primary-border: #b7c5d9;
+    --text-dark: #34345c;
+    --text-accent: #af0a0f;
+    --accent-hover: #d00;
+    --text-green: #117743;
+    --text-red: #771111;
+    --text-gray: #666;
+    --text-light-gray: #89a;
+    --success-bg: #ffe6e6;
 }
 
-body {
-    background-color: #eef2ff;
-    font-family: Arial, sans-serif;
-    font-size: 10pt;
-    color: #000;
-}
+/* ========== RESET Y ESTILOS GENERALES ========== */
 a, a:visited {
-    color: #34345c;
+    color: var(--text-dark);
     text-decoration: none;
 }
 
-a:hover {
-    text-decoration: underline;
+a:active, a:hover {
+    color: var(--accent-hover);
+    text-decoration: none;
 }
 
-/* ========== HEADER ========== */
-.header {
-    background-color: #d6daf0;
-    border-bottom: 1px solid #b7c5d9;
+/* ========== HEADER Y NAVEGACIÓN ========== */
+.header,
+.nav {
+    background-color: var(--primary-bg);
+    border-bottom: 1px solid var(--primary-border);
     padding: 10px;
     text-align: center;
 }
 
+.nav {
+    padding: 5px 10px;
+}
+
 .header h1 {
-    color: #af0a0f;
-    font-size: 28pt;
+    color: var(--text-accent);
+    font-size: 24pt;
     font-weight: bold;
     margin-bottom: 5px;
 }
 
-.header h1 {
-    font-size: 24pt;
-}
-
 .header .subtitle {
-    color: #89a;
+    color: var(--text-light-gray);
     font-size: 9pt;
 }
 
-/* ========== NAVEGACIÓN ========== */
-.nav {
-    background-color: #d6daf0;
-    border-bottom: 1px solid #b7c5d9;
-    padding: 5px 10px;
-    text-align: center;
-}
-
 .nav a {
-    color: #34345c;
     margin: 0 10px;
-    text-decoration: none;
     font-weight: bold;
 }
 
 .nav a:hover {
-    color: #d00;
+    color: var(--accent-hover);
 }
 
 /* ========== CONTENEDOR PRINCIPAL ========== */
 .container {
     max-width: 1000px;
     margin: 20px auto;
-    padding: 0 10px;
+    padding: 0 5px;
 }
 
 /* ========== TABLONES (INDEX) ========== */
 .intro {
-    background-color: #d6daf0;
-    border: 1px solid #b7c5d9;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--primary-border);
     padding: 15px;
     margin-bottom: 20px;
     text-align: center;
@@ -81,6 +75,7 @@ a:hover {
 
 .intro h2 {
     color: #0f0c5d;
+    font-size: 20pt;
     margin-bottom: 10px;
 }
 
@@ -92,42 +87,41 @@ a:hover {
 }
 
 .board-card {
-    background-color: #d6daf0;
-    border: 1px solid #b7c5d9;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--primary-border);
     padding: 15px;
-    text-decoration: none;
     color: #000;
+    cursor: pointer;
     transition: background-color 0.2s;
 }
 
 .board-card:hover {
     background-color: #c5cfe0;
-    text-decoration: none;
 }
 
 .board-title {
     color: #0f0c5d;
-    font-size: 18pt;
+    font-size: 20pt;
     font-weight: bold;
     margin-bottom: 5px;
 }
 
 .board-name {
-    color: #af0a0f;
-    font-size: 14pt;
+    color: var(--text-accent);
+    font-size: 15pt;
     margin-bottom: 10px;
 }
 
 .board-desc {
-    color: #666;
-    font-size: 9pt;
+    color: var(--text-gray);
+    font-size: 10pt;
     line-height: 1.4;
 }
 
 /* ========== FORMULARIO DE POST ========== */
 .post-form {
-    background-color: #d6daf0;
-    border: 1px solid #b7c5d9;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--primary-border);
     padding: 10px;
     margin-bottom: 20px;
 }
@@ -157,6 +151,7 @@ a:hover {
     padding: 4px;
     border: 1px solid #aaa;
     background-color: #fff;
+    box-sizing: border-box;
 }
 
 .post-form input[type="file"] {
@@ -164,15 +159,17 @@ a:hover {
 }
 
 .post-form button {
-    background-color: #d4d3ff;
     border: 1px solid #0f0c5d;
     color: #0f0c5d;
     padding: 5px 10px;
     cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
 }
 
 .post-form button:hover {
-    background-color: #b8b7f6;
+    border: 1px solid #d00;
+    color: #d00;
 }
 
 /* ========== THREADS Y POSTS ========== */
@@ -181,59 +178,53 @@ a:hover {
     margin-bottom: 10px;
     overflow: auto;
 }
-.thread-preview {
-    background-color: #d6daf0;
-    border: 1px solid #b7c5d9;
+
+.thread-preview,
+.reply-post,
+.report-container {
+    background-color: var(--primary-bg);
+    border: 1px solid var(--primary-border);
     padding: 10px;
     margin-bottom: 10px;
+    overflow: auto;
+}
+
+.thread-preview,
+.board-card {
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
-.thread-preview:hover {
+.thread-preview:hover,
+.board-card:hover {
     background-color: #c5cfe0;
 }
 
-.reply-post,
-.report-container {
-    background-color: #d6daf0;
-    border: 1px solid #b7c5d9;
-    overflow: auto;
-    padding: 10px;
-    margin-bottom: 10px;
-}
-
-.post-header-file {
-    font-size: 10pt;
-    color: #474848;
+/* ========== HEADERS DE POSTS ========== */
+.thread-header,
+.reply-header,
+.report-header {
+    margin-bottom: 5px;
 }
 
 .thread-header .subject,
 .reply-header .subject,
 .report-header .subject {
-    color: #771111;
+    color: var(--text-red);
     font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.reply-header {
     margin-bottom: 5px;
 }
 
 .thread-header .name,
 .reply-header .name,
 .report-header .name {
-    color: #117743;
+    color: var(--text-green);
     font-weight: 600;
 }
 
 .thread-header .date,
 .reply-header .date,
-.report-header .date {
-    color: #000;
-    font-weight: normal;
-}
-
+.report-header .date,
 .thread-header .id,
 .reply-header .id,
 .report-header .id {
@@ -245,10 +236,12 @@ a:hover {
     text-decoration: none;
 }
 
-.comment {
-    color: #3a3a3a;
+.post-header-file {
+    font-size: 10pt;
+    color: #474848;
 }
 
+/* ========== CONTENIDO DE POSTS ========== */
 .post-subject {
     color: #0f0c5d;
     font-weight: bold;
@@ -263,11 +256,8 @@ a:hover {
     font-size: 12pt;
 }
 
-.thread-image {
-    float: left;
-    margin-right: 10px;
-    max-width: 250px;
-    cursor: pointer;
+.comment {
+    color: #3a3a3a;
 }
 
 .post-message {
@@ -275,17 +265,100 @@ a:hover {
     line-height: 1.4;
 }
 
-/* ========== NAVEGACIÓN DE VUELTA ========== */
-.back-link {
-    display: inline-block;
-    margin-bottom: 15px;
-    color: #34345c;
-    text-decoration: none;
+.thread-image {
+    float: left;
+    margin-right: 10px;
+    max-width: 250px;
+    cursor: pointer;
+}
+
+/* ========== ESTILOS DE TEXTO ========== */
+.greentext {
+    color: #789922;
+}
+
+.pinktext {
+    color: #e0727f;
+}
+
+.post-reference {
+    color: var(--text-dark);
+    cursor: pointer;
+}
+
+.post-reference:hover {
+    color: var(--accent-hover);
+}
+
+.url-link {
+    color: var(--text-dark);
+}
+
+.url-link:hover {
+    color: var(--accent-hover);
+}
+
+.banned-url {
+    color: var(--accent-hover);
     font-weight: bold;
 }
 
+.id {
+    color: var(--text-dark);
+    font-weight: bold;
+}
+
+.id:hover {
+    color: var(--accent-hover);
+}
+
+.backlink {
+    color: var(--accent-hover);
+    font-size: 8pt;
+    margin-left: 5px;
+}
+
+.backlink a {
+    color: var(--accent-hover);
+    text-decoration: none;
+}
+
+.backlink a:hover {
+    text-decoration: underline;
+}
+
+/* ========== BOTONES ========== */
+.report-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-dark);
+    transition: color 0.2s;
+}
+
+.report-btn:hover {
+    color: var(--accent-hover);
+}
+
+.delete-btn {
+    color: var(--accent-hover);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+
 .back-link:hover {
-    color: #d00;
+    color: var(--accent-hover);
 }
 
 /* ========== LIGHTBOX ========== */
@@ -296,11 +369,15 @@ a:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.9);
+    background-color: rgba(0, 0, 0, 0.9);
     z-index: 1000;
     justify-content: center;
     align-items: center;
     cursor: pointer;
+}
+
+.lightbox.active {
+    display: flex;
 }
 
 .lightbox img {
@@ -308,14 +385,86 @@ a:hover {
     max-height: 90%;
 }
 
-.lightbox.active {
-    display: flex;
+/* ========== TOOLTIPS Y PREVIEWS ========== */
+.post-preview-tooltip {
+    position: fixed;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--primary-border);
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    padding: 8px;
+    font-size: 10pt;
+    pointer-events: none;
+    max-width: 400px;
 }
 
-/* ========== ADMIN PANEL ========== */
+.post-preview-tooltip .post-preview,
+.post-preview-tooltip .thread-container,
+.post-preview-tooltip .thread-op {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.post-preview-tooltip .thread-header,
+.post-preview-tooltip .reply-header {
+    font-size: 10pt;
+    margin-bottom: 5px;
+}
+
+.post-preview-tooltip .comment {
+    font-size: 10pt;
+    overflow: hidden;
+}
+
+.post-preview-tooltip .preview-image,
+.post-preview-tooltip .thread-image {
+    max-width: 100px;
+    max-height: 100px;
+    margin-top: 5px;
+    cursor: pointer;
+}
+
+.post-preview-tooltip .board-indicator {
+    color: var(--accent-hover);
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.post-preview-tooltip .preview-footer {
+    margin-top: 8px;
+    padding-top: 5px;
+    border-top: 1px solid var(--primary-border);
+    text-align: right;
+}
+
+.post-preview-tooltip .preview-footer a {
+    color: var(--text-dark);
+    text-decoration: none;
+    font-size: 8pt;
+}
+
+.post-preview-tooltip .preview-footer a:hover {
+    text-decoration: underline;
+}
+
+.post-preview-tooltip .post-header-file {
+    color: #474848;
+    font-size: 9pt;
+    margin-bottom: 5px;
+}
+
+.post-preview-tooltip .post-image {
+    float: left;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+/* ========== PANEL ADMIN / LOGIN ========== */
 .login-panel {
     background-color: #ffe;
-    border: 2px solid #d00;
+    border: 2px solid var(--accent-hover);
     padding: 20px;
     max-width: 400px;
     margin: 50px auto;
@@ -323,7 +472,7 @@ a:hover {
 }
 
 .login-panel h2 {
-    color: #d00;
+    color: var(--accent-hover);
     margin-bottom: 15px;
 }
 
@@ -332,22 +481,25 @@ a:hover {
     padding: 8px;
     margin: 10px 0;
     border: 1px solid #aaa;
+    box-sizing: border-box;
 }
 
 .login-panel button {
-    background-color: #d00;
+    background-color: var(--accent-hover);
     color: #fff;
     border: none;
     padding: 10px 30px;
     cursor: pointer;
     font-weight: bold;
     margin-top: 10px;
+    transition: background-color 0.2s;
 }
 
 .login-panel button:hover {
     background-color: #a00;
 }
 
+/* ========== PANEL DE ADMINISTRACIÓN ========== */
 .admin-content {
     display: none;
 }
@@ -357,8 +509,8 @@ a:hover {
 }
 
 .stats-panel {
-    background-color: #d6daf0;
-    border: 1px solid #b7c5d9;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--primary-border);
     padding: 15px;
     margin-bottom: 20px;
 }
@@ -378,7 +530,7 @@ a:hover {
 .stat-card {
     background-color: #fff;
     padding: 15px;
-    border: 1px solid #b7c5d9;
+    border: 1px solid var(--primary-border);
     text-align: center;
 }
 
@@ -389,13 +541,13 @@ a:hover {
 }
 
 .stat-label {
-    color: #666;
+    color: var(--text-gray);
     font-size: 9pt;
 }
 
 .board-selector {
-    background-color: #d6daf0;
-    border: 1px solid #b7c5d9;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--primary-border);
     padding: 10px;
     margin-bottom: 20px;
 }
@@ -406,10 +558,11 @@ a:hover {
 }
 
 .board-selector button {
-    background-color: #d6daf0;
-    border: 1px solid #b7c5d9;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--primary-border);
     padding: 5px 15px;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .board-selector button:hover {
@@ -417,14 +570,14 @@ a:hover {
 }
 
 .content-list {
-    background-color: #d6daf0;
-    border: 1px solid #b7c5d9;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--primary-border);
     padding: 10px;
 }
 
 .content-item {
     background-color: #fff;
-    border: 1px solid #b7c5d9;
+    border: 1px solid var(--primary-border);
     padding: 10px;
     margin-bottom: 10px;
 }
@@ -439,12 +592,12 @@ a:hover {
 }
 
 .content-info {
-    color: #666;
+    color: var(--text-gray);
     font-size: 9pt;
 }
 
 .content-info strong {
-    color: #117743;
+    color: var(--text-green);
 }
 
 .content-message {
@@ -459,17 +612,10 @@ a:hover {
 
 .content-image img {
     max-width: 100%;
-    border: 1px solid #b7c5d9;
+    border: 1px solid var(--primary-border);
 }
 
-.delete-btn {
-    color: #d00;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-}
-
+/* ========== TABS ========== */
 .tabs {
     display: flex;
     gap: 5px;
@@ -477,11 +623,12 @@ a:hover {
 }
 
 .tab {
-    background-color: #d6daf0;
-    border: 1px solid #b7c5d9;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--primary-border);
     padding: 10px 20px;
     cursor: pointer;
     font-weight: bold;
+    transition: all 0.2s;
 }
 
 .tab:hover {
@@ -501,32 +648,7 @@ a:hover {
     display: block;
 }
 
-/* ========== UTILIDADES ========== */
-.loading {
-    color: #666;
-    margin-bottom: 10px;
-}
-
-.hidden {
-    display: none;
-}
-
-.footer {
-    text-align: center;
-    padding: 20px;
-    color: #89a;
-    font-size: 9pt;
-}
-
-/* ========== BOTONES ========== */
-.report-btn {
-    color: #34345c;
-    background: none;
-    border: none;
-    cursor: pointer;
-}
-
-/* ========== ESTILOS ADMIN PARA REPORTES ========== */
+/* ========== REPORTES ========== */
 .report-item {
     border-left: 4px solid #7d2d2f;
 }
@@ -544,30 +666,13 @@ a:hover {
     gap: 10px;
 }
 
-/* ========== RESPONSIVE ========== */
-@media (max-width: 768px) {
-    .boards-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .reply-post {
-        margin-left: 0;
-    }
-
-    .post-image .thread-image {
-        width: 100%;
-        max-width: 100%;
-        margin-bottom: 10px;
-    }
-}
-
 /* ========== PÁGINA DE REGLAS ========== */
 .rules-content h2 {
-    color: #af0a0f;
+    color: var(--text-accent);
     font-size: 18pt;
     margin-bottom: 20px;
     text-align: center;
-    border-bottom: 2px solid #d6daf0;
+    border-bottom: 2px solid var(--primary-bg);
     padding-bottom: 10px;
 }
 
@@ -576,7 +681,7 @@ a:hover {
 }
 
 .rules-section h3 {
-    color: #af0a0f;
+    color: var(--text-accent);
     font-size: 14pt;
     margin-bottom: 10px;
 }
@@ -586,7 +691,7 @@ a:hover {
 }
 
 .rule-item strong {
-    color: #af0a0f;
+    color: var(--text-accent);
 }
 
 .board-rules {
@@ -594,7 +699,7 @@ a:hover {
 }
 
 .board-rules h4 {
-    color: #af0a0f;
+    color: var(--text-accent);
     font-size: 12pt;
     margin-bottom: 5px;
 }
@@ -610,12 +715,12 @@ a:hover {
 }
 
 .disclaimer {
-    background-color: #ffe6e6;
+    background-color: var(--success-bg);
     padding: 15px;
 }
 
 .disclaimer h3 {
-    color: #af0a0f;
+    color: var(--text-accent);
     font-size: 12pt;
     margin-bottom: 10px;
 }
@@ -630,240 +735,95 @@ a:hover {
     color: #707070;
 }
 
-/* Responsive para reglas */
-@media (max-width: 768px) {
-    .rules-content {
-        padding: 10px;
-    }
-    
-    .rules-content h2 {
-        font-size: 16pt;
-    }
-    
-    .rules-section h3 {
-        font-size: 12pt;
-    }
-    
-    .board-rules h4 {
-        font-size: 11pt;
-    }
-}
-
-/* ========== GREENTEXT Y PINKTEXT ========== */
-.greentext {
-    color: #789922 !important;
-    font-weight: normal;
-}
-
-.pinktext {
-    color: #e0727f !important;
-    font-weight: normal;
-}
-
-/* ========== SISTEMA DE REFERENCIAS ESTILO 4CHAN ========== */
-.post-reference {
-    color: #34345c !important;
-    cursor: pointer;
-}
-
-.post-reference:hover {
-    text-decoration: underline;
-}
-
-/* ========== URLS ========== */
-.url-link {
-    color: #34345c !important;
-    text-decoration: underline;
-}
-
-.url-link:hover {
-    color: #d00 !important;
-}
-
-.banned-url {
-    color: #d00 !important;
-    font-weight: bold;
-}
-
-/* ========== TOOLTIPS Y PREVIEWS ========== */
-.post-preview-tooltip {
-    position: fixed;
-    background-color: #d6daf0;
-    border: 1px solid #b7c5d9;
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    z-index: 9999;
-    padding: 8px;
-    font-size: 10pt;
-    pointer-events: none;
-    max-width: 400px;
-}
-
-.post-preview-tooltip .post-preview {
-    margin: 0;
-    padding: 0;
-    background: transparent;
-    border: none;
-}
-
-.post-preview-tooltip .thread-header,
-.post-preview-tooltip .reply-header {
-    font-size: 10pt;
-    margin-bottom: 5px;
-}
-
-.post-preview-tooltip .comment {
-    font-size: 10pt;
-    overflow: hidden;
-}
-
-.post-preview-tooltip .preview-image {
-    max-width: 150px;
-    max-height: 150px;
-    margin-top: 5px;
-}
-
-/* Estilos específicos para estructura de posts en tooltips */
-.post-preview-tooltip .thread-container {
-    margin: 0;
-    background: transparent;
-}
-
-.post-preview-tooltip .thread-op {
-    background-color: #d6daf0;
-    border: none;
-    padding: 0;
-    margin: 0;
-}
-
-.post-preview-tooltip .post-header-file {
-    color: #474848;
-    font-size: 9pt;
-    margin-bottom: 5px;
-}
-
-.post-preview-tooltip .post-image {
-    float: left;
-    margin-right: 5px;
-    margin-bottom: 5px;
-}
-
-.post-preview-tooltip .thread-image {
-    max-width: 100px;
-    max-height: 100px;
-    cursor: pointer;
-}
-
-.post-preview-tooltip .board-indicator {
-    color: #d00;
-    font-weight: bold;
-    margin-right: 5px;
-}
-
-.post-preview-tooltip .preview-footer {
-    margin-top: 8px;
-    padding-top: 5px;
-    border-top: 1px solid #b7c5d9;
-    text-align: right;
-}
-
-.post-preview-tooltip .preview-footer a {
-    color: #34345c;
-    text-decoration: none;
-    font-size: 8pt;
-}
-
-.post-preview-tooltip .preview-footer a:hover {
-    text-decoration: underline;
-}
-
-/* ========== MEJORAS DE USABILIDAD ========== */
-.id {
-    color: #34345c !important;
-    font-weight: bold;
-}
-
-.id:hover {
-    text-decoration: underline;
-}
-
-/* Indicador de respuestas anidadas */
-.reply[data-parent] {
-    margin-left: 20px;
-    border-left: 2px solid #d6bad0;
-    padding-left: 10px;
-}
-
-/* Contador de respuestas */
-.reply-count {
-    color: #117743;
-    font-weight: bold;
-    font-size: 9pt;
-}
-
-/* ========== BACKLINKS (YOUs) ========== */
-.backlink {
-    color: #d00;
-    font-size: 8pt;
-    margin-left: 5px;
-}
-
-.backlink a {
-    color: #d00;
-    text-decoration: none;
-}
-
-.backlink a:hover {
-    text-decoration: underline;
-}
-
-/* ========== CONTENEDOR DE THREADS CON RESPUESTAS ========== */
-
+/* ========== VARIAS ========== */
 .reply-preview {
     margin-left: 20px;
 }
 
 .omitted-replies {
     margin: 10px 0;
-    color: #666;
+    color: var(--text-gray);
     font-size: 9pt;
     font-style: italic;
 }
 
 .omitted-replies a {
-    color: #34345c;
+    color: var(--text-dark);
     text-decoration: none;
 }
 
 .omitted-replies a:hover {
-    text-decoration: underline;
+    color: var(--accent-hover);
 }
 
-/* ========== RESPONSIVE PARA REFERENCIAS ========== */
+.loading {
+    color: var(--text-gray);
+    margin-bottom: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+.footer {
+    text-align: center;
+    padding: 0 20px 20px 20px;
+    color: var(--text-light-gray);
+    font-size: 9pt;
+}
+
+/* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
+    .boards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .reply-post {
+        margin-left: 0;
+    }
+
+    .reply-preview {
+        margin-left: 0;
+    }
+
+    .omitted-replies {
+        margin-left: 0;
+    }
+
+    .post-image .thread-image {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 10px;
+    }
+
     .post-preview-tooltip {
         max-width: 90vw;
         font-size: 8pt;
     }
-    
-    .reply[data-parent] {
-        margin-left: 10px;
-    }
-    
+
     .post-preview-tooltip .preview-image {
-        max-width: 100px;
-        max-height: 100px;
+        max-width: 120px;
+        max-height: 120px;
     }
-    
+
     .thread-container {
         margin-bottom: 0;
         padding: 5px;
     }
-    
-    .reply-preview {
-        margin-left: 0px;
+
+    .rules-content {
+        padding: 10px;
     }
-    
-    .omitted-replies {
-        margin-left: 0px;
+
+    .rules-content h2 {
+        font-size: 16pt;
+    }
+
+    .rules-section h3 {
+        font-size: 12pt;
+    }
+
+    .board-rules h4 {
+        font-size: 11pt;
     }
 }
