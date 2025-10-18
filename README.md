@@ -1,14 +1,14 @@
 # FireChan
 
-FireChan es un imageboard estilo 4chan/2chan desarrollado con tecnologías web modernas. Permite a los usuarios crear tablones temáticos, publicar threads, responder con imágenes y texto, todo almacenado en Firebase.
+FireChan es un imageboard estilo 4chan/2chan desarrollado con tecnologías web modernas. Permite a los usuarios crear tablones temáticos, publicar, responder con imágenes y texto, todo almacenado en Firebase.
 
 ## Características
 
 - **Múltiples tablones temáticos**: Anime, Tecnología, Videojuegos, Política, Paranormal y más
-- **Sistema de threads y respuestas**: Publica contenido y responde a otros usuarios
+- **Sistema de publicaciones y respuestas**: Publica contenido y responde a otros usuarios
 - **Soporte de imágenes**: Integración con ImgBB para subir y almacenar imágenes
 - **Formato de texto enriquecido**: Soporta greentext, citas, enlaces y formato especial
-- **Panel de administración**: Gestiona threads, respuestas y reportes
+- **Panel de administración**: Gestiona publicaciones, respuestas y reportes
 - **Sistema de reportes**: Los usuarios pueden reportar contenido inapropiado
 - **Diseño responsive**: Funciona en dispositivos móviles y escritorio
 - **Lightbox para imágenes**: Visualiza imágenes en pantalla completa
@@ -51,12 +51,9 @@ cd FireChan
    - Registra una aplicación web
    - Copia la configuración de Firebase
 
-5. Crea el archivo `js/firebase-config.js` con tus credenciales:
+5. Configura el archivo `js/firebase-config.js` con tus credenciales:
 
 ```javascript
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-
 const firebaseConfig = {
     apiKey: "TU_API_KEY",
     authDomain: "tu-proyecto.firebaseapp.com",
@@ -65,9 +62,6 @@ const firebaseConfig = {
     messagingSenderId: "123456789",
     appId: "tu-app-id"
 };
-
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
 ```
 
 ### 3. Configurar ImgBB API
@@ -98,19 +92,6 @@ export const adminConfig = {
 
 ### 5. Desplegar el Sitio
 
-#### Opción A: Servidor Local
-
-Usa cualquier servidor HTTP local. Por ejemplo, con Python:
-
-```bash
-# Python 3
-python -m http.server 8000
-
-# Luego abre http://localhost:8000 en tu navegador
-```
-
-#### Opción B: Hosting Web
-
 Puedes desplegar en:
 - **Firebase Hosting**: `firebase deploy`
 - **GitHub Pages**: Sube los archivos a tu repositorio
@@ -122,8 +103,8 @@ Puedes desplegar en:
 ```
 FireChan/
 ├── index.html          # Página principal con tablones
-├── thread.html         # Vista de threads de un tablón
-├── reply.html          # Vista de thread individual con respuestas
+├── thread.html         # Vista de publicaciones de un tablón
+├── reply.html          # Vista de publicación individual con respuestas
 ├── admin.html          # Panel de administración
 ├── rules.html          # Reglas del sitio
 ├── css/
@@ -131,7 +112,7 @@ FireChan/
 ├── js/
 │   ├── firebase-config.js  # Configuración de Firebase (crear)
 │   ├── config.js           # Configuración general
-│   ├── thread.js           # Lógica de threads
+│   ├── thread.js           # Lógica de publicaciones
 │   ├── reply.js            # Lógica de respuestas
 │   ├── admin.js            # Lógica del panel admin
 │   └── text-processor.js   # Procesamiento de texto (greentext, etc.)
@@ -143,15 +124,15 @@ FireChan/
 ### Para Usuarios
 
 1. **Navegar tablones**: Accede a `index.html` y selecciona un tablón
-2. **Crear thread**: En un tablón, llena el formulario y haz clic en "Publicar"
-3. **Responder**: Abre un thread y usa el formulario de respuesta
+2. **Crear publicación**: En un tablón, llena el formulario y haz clic en "Publicar"
+3. **Responder**: Abre una publicación y usa el formulario de respuesta
 4. **Reportar contenido**: Usa el botón "Reportar" en cualquier publicación
 
 ### Para Administradores
 
 1. Accede a `admin.html`
 2. Inicia sesión con las credenciales configuradas
-3. Gestiona threads, respuestas y reportes desde el panel
+3. Gestiona publicaciones, respuestas y reportes desde el panel
 
 ## Personalización
 
