@@ -177,11 +177,14 @@ a:active, a:hover {
 .thread-op {
     margin-bottom: 10px;
     overflow: auto;
+    float: left;
+    display: contents;
 }
 
 .thread-preview,
 .reply-post,
 .report-container {
+    display: table;
     background-color: var(--primary-bg);
     border: 1px solid var(--primary-border);
     padding: 10px;
@@ -673,6 +676,11 @@ a:active, a:hover {
 .admin-item-header div {
     display: flex;
     gap: 10px;
+}
+
+.no-float {
+    float: none !important;
+    display: block !important;
 }
 
 /* ========== PÁGINA DE REGLAS ========== */

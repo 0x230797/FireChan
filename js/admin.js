@@ -133,7 +133,7 @@ window.loadThreads = async () => {
 
             threadsHTML += `
                 <div class="thread-container">
-                    <div class="thread-op">
+                    <div class="thread-op no-float">
                         ${fileSection}
                         <div class="post-image">
                             ${thread.imageUrl ? `<img src="${thread.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
