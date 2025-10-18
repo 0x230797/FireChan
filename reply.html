@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Respuestas - Imageboard</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/reset.css">
 </head>
 <body>
-    <div class="header small">
+    <div class="header">
         <h1 id="boardTitle">Respuestas</h1>
+        <div class="subtitle" id="boardSubtitle">Respuestas de la publicación</div>
     </div>
 
     <div class="nav">
@@ -41,11 +43,11 @@
                 </tr>
                 <tr>
                     <td></td>
-                    <td><span style="font-size:7pt;color:rgb(102, 102, 102);text-align:right">Antes de realizar una publicación, asegúrate de seguir las <a href="rules.html">reglas</a> del tablón.<br>Formatos permitidos: JPG, JPEG, PNG, GIF, WEBP. Tamaño máximo: 5MB.</span></td>
+                    <td><span style="font-size:10pt;color:rgb(87 87 87);text-align:right">Antes de realizar una publicación, asegúrate de seguir las <a href="rules.html">reglas</a> del tablón.<br>Formatos permitidos: JPG, JPEG, PNG, GIF, WEBP. Tamaño máximo: 5MB.</span></td>
                 </tr>
                 <tr>
                     <td></td>
-                    <td><button onclick="submitReply()">Publicar Respuesta</button></td>
+                    <td><button onclick="submitReply()">Publicar</button></td>
                 </tr>
             </table>
         </div>

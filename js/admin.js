@@ -200,7 +200,7 @@ window.loadReplies = async () => {
             ` : '';
 
             repliesHTML += `
-                <div class="reply-post" data-post-id="${reply.postId}" data-id="${reply.postId}">
+                <div class="reply-post">
                     ${replyFileSection}
                         <div class="post-image">
                             ${reply.imageUrl ? `<img src="${reply.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}

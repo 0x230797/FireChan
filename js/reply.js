@@ -251,7 +251,7 @@ async function loadReplies() {
             ` : '';
 
             repliesHTML += `
-                <div class="reply-post" id="${reply.postId}" data-post-id="${reply.postId}" data-id="${reply.postId}">
+                <div class="reply-post" data-post-id="${reply.postId}" data-id="${reply.postId}" id="${reply.postId}">
                     ${replyFileSection}
                     <div class="post-image">
                         ${reply.imageUrl ? `<img src="${reply.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}

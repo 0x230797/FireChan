@@ -164,7 +164,7 @@ async function loadThreads() {
             
             threadsHTML += `
                 <div class="thread-container">
-                    <div class="thread-op" id="${thread.postId}" data-post-id="${thread.postId}" data-id="${thread.postId}">
+                    <div class="thread-op" data-post-id="${thread.postId}" data-id="${thread.postId}" id="${thread.postId}">
                         ${fileSection}
                         <div class="post-image">
                             ${thread.imageUrl ? `<img src="${thread.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
