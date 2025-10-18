@@ -485,6 +485,9 @@ function createPostPreviewHTML(postData, postId, type, board) {
     const comment = postData.comment || '';
     const subject = postData.subject || '';
     
+    // Verificar si es post de admin para aplicar estilo especial
+    const nameClass = postData.isAdmin ? 'admin-name' : '';
+    
     const fileSection = postData.imageUrl ? `
         <div class="post-header-file">
             <b>Archivo:</b>
@@ -509,7 +512,7 @@ function createPostPreviewHTML(postData, postId, type, board) {
                 <div class="thread-header">
                     <span class="board-indicator">/${board}/</span>
                     <span class="subject">${escapeHtml(subject)}</span>
-                    <span class="name">${escapeHtml(name)}</span>
+                    <span class="name ${nameClass}">${escapeHtml(name)}</span>
                     <span class="date">${date}</span>
                 </div>
                 <div class="comment">${escapeHtml(processedComment)}</div>

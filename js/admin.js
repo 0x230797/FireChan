@@ -63,7 +63,30 @@ window.handleEnterKey = (event) => {
 window.logout = () => {
     localStorage.removeItem('adminAuthenticated');
     showLoginPanel();
+    // Resetear formularios de nombres en otras páginas si existen
+    resetNameFields();
 };
+
+// Función para resetear campos de nombre cuando se cierra sesión
+function resetNameFields() {
+    // Intentar resetear el campo de thread.html si existe
+    const threadNameField = document.getElementById('postName');
+    if (threadNameField) {
+        threadNameField.value = '';
+        threadNameField.placeholder = 'Anónimo';
+        threadNameField.disabled = false;
+        threadNameField.classList.remove('admin-field');
+    }
+    
+    // Intentar resetear el campo de reply.html si existe
+    const replyNameField = document.getElementById('replyName');
+    if (replyNameField) {
+        replyNameField.value = '';
+        replyNameField.placeholder = 'Anónimo';
+        replyNameField.disabled = false;
+        replyNameField.classList.remove('admin-field');
+    }
+}
 
 async function loadStats() {
     try {
@@ -122,6 +145,10 @@ window.loadThreads = async () => {
                 (thread.timestamp.toDate ? thread.timestamp.toDate() : new Date(thread.timestamp)) 
                 : new Date();
 
+            // Verificar si es post de admin para aplicar estilo especial
+            const nameClass = thread.isAdmin ? 'admin-name' : '';
+            const displayName = thread.name || 'Anónimo';
+
             // Crear sección de archivo si hay imagen
             const fileSection = thread.imageUrl ? `
                 <div class="post-header-file">
@@ -140,7 +167,7 @@ window.loadThreads = async () => {
                         </div>
                         <div class="thread-header">
                             <span class="subject">/${thread.board}/ - ${thread.subject || ''}</span>
-                            <span class="name">${thread.name || 'Anónimo'}</span>
+                            <span class="name ${nameClass}">${displayName}</span>
                             <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                             <span class="id">No.${thread.postId || 'N/A'}</span>
                             [<a href="reply.html?board=${thread.board}&thread=${thread.postId}">Ver publicación</a>]
@@ -190,6 +217,10 @@ window.loadReplies = async () => {
             const replyBoard = threadBoardMap[reply.threadId] || 'unknown';
             const threadPostId = threadPostIdMap[reply.threadId] || reply.threadId;
 
+            // Verificar si es post de admin para aplicar estilo especial
+            const nameClass = reply.isAdmin ? 'admin-name' : '';
+            const displayName = reply.name || 'Anónimo';
+
             // Crear sección de archivo si hay imagen
             const replyFileSection = reply.imageUrl ? `
                 <div class="post-header-file">
@@ -207,7 +238,7 @@ window.loadReplies = async () => {
                         </div>
                         <div class="reply-header">
                             <span class="subject">/${replyBoard}/</span>
-                            <span class="name">${reply.name || 'Anónimo'}</span>
+                            <span class="name ${nameClass}">${displayName}</span>
                             <span class="date">${timestamp.toLocaleString()}</span>
                             <span class="id">No.${reply.postId || 'N/A'}</span>
                             [<a href="reply.html?board=${replyBoard}&thread=${threadPostId}#${reply.postId}">Ver respuesta</a>]

@@ -154,6 +154,11 @@ a:active, a:hover {
     box-sizing: border-box;
 }
 
+/* Estilo especial para campos de admin deshabilitados */
+.post-form input[type="text"]:disabled.admin-field {
+    font-weight: bold;
+}
+
 .post-form input[type="file"] {
     width: 100%;
 }
@@ -222,7 +227,15 @@ a:active, a:hover {
 .reply-header .name,
 .report-header .name {
     color: var(--text-green);
-    font-weight: 600;
+    font-weight: bold;
+}
+
+/* Estilo especial para nombres de administrador */
+.thread-header .name.admin-name,
+.reply-header .name.admin-name,
+.report-header .name.admin-name {
+    color: var(--text-red);
+    font-weight: bold;
 }
 
 .thread-header .date,
@@ -754,7 +767,7 @@ a:active, a:hover {
 
 /* ========== VARIAS ========== */
 .reply-preview {
-    margin-left: 20px;
+    margin-left: 0px;
 }
 
 .omitted-replies {

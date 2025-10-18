@@ -18,7 +18,35 @@ function formatFileSize(bytes) {
 document.addEventListener('DOMContentLoaded', () => {
     loadThreads();
     updateBoardTitle();
+    checkAdminStatusForForm();
+    
+    // Escuchar cambios en el localStorage para actualizar el formulario
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'adminAuthenticated') {
+            checkAdminStatusForForm();
+        }
+    });
 });
+
+// Función para verificar si es admin y modificar el formulario
+function checkAdminStatusForForm() {
+    const isAdmin = localStorage.getItem('adminAuthenticated') === 'true';
+    const nameField = document.getElementById('postName');
+    
+    if (nameField) {
+        if (isAdmin) {
+            nameField.value = 'Administrador';
+            nameField.placeholder = 'Administrador';
+            nameField.disabled = true;
+            nameField.classList.add('admin-field');
+        } else {
+            nameField.value = '';
+            nameField.placeholder = 'Anónimo';
+            nameField.disabled = false;
+            nameField.classList.remove('admin-field');
+        }
+    }
+}
 
 // Función para generar el siguiente ID de post
 async function getNextPostId() {
@@ -162,6 +190,10 @@ async function loadThreads() {
             // Cargar las últimas 5 respuestas de este thread
             const repliesHTML = await loadLastReplies(doc.id, actualReplyCount, thread.postId);
             
+            // Verificar si es post de admin para aplicar estilo especial
+            const nameClass = thread.isAdmin ? 'admin-name' : '';
+            const displayName = thread.name || 'Anónimo';
+
             threadsHTML += `
                 <div class="thread-container">
                     <div class="thread-op" data-post-id="${thread.postId}" data-id="${thread.postId}" id="${thread.postId}">
@@ -171,11 +203,11 @@ async function loadThreads() {
                         </div>
                         <div class="thread-header">
                             <span class="subject">${thread.subject || ''}</span>
-                            <span class="name">${thread.name || 'Anónimo'}</span>
+                            <span class="name ${nameClass}">${displayName}</span>
                             <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                             <span class="id" onclick="quotePost('${thread.postId || 'N/A'}', '${thread.postId || 'N/A'}')" style="cursor: pointer;" title="Responder a esta publicación">No.${thread.postId || 'N/A'}</span>
                             [<a href="reply.html?board=${currentBoard}&thread=${thread.postId}">Responder</a> (${actualReplyCount})]
-                            [<button class="report-btn" onclick="reportPost('${doc.id}', 'thread', ${thread.postId}, '${encodeURIComponent(thread.name || 'Anónimo')}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
+                            [<button class="report-btn" onclick="reportPost('${doc.id}', 'thread', ${thread.postId}, '${encodeURIComponent(displayName)}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
                         </div>
                         <div class="comment">${processText(thread.comment)}</div>
                     </div>
@@ -193,7 +225,16 @@ async function loadThreads() {
 
 window.submitThread = async () => {
     const subject = document.getElementById('postSubject').value;
-    const name = document.getElementById('postName').value || 'Anónimo';
+    
+    // Verificar si el administrador está logueado
+    const isAdmin = localStorage.getItem('adminAuthenticated') === 'true';
+    let name = document.getElementById('postName').value;
+    
+    // Si no se especifica nombre, usar 'Administrador' si es admin, o 'Anónimo' si no
+    if (!name) {
+        name = isAdmin ? 'Administrador' : 'Anónimo';
+    }
+    
     const comment = document.getElementById('postComment').value;
     const file = document.getElementById('postFile').files[0];
 
@@ -252,7 +293,8 @@ window.submitThread = async () => {
             imageHeight,
             postId,
             timestamp: serverTimestamp(),
-            replyCount: 0
+            replyCount: 0,
+            isAdmin: isAdmin  // Marcar si es post de admin
         });
 
         alert('Thread creado exitosamente!');
@@ -425,6 +467,10 @@ async function loadLastReplies(threadId, totalReplies, threadPostId) {
                 (reply.timestamp.toDate ? reply.timestamp.toDate() : new Date(reply.timestamp)) 
                 : new Date();
 
+            // Verificar si es post de admin para aplicar estilo especial
+            const nameClass = reply.isAdmin ? 'admin-name' : '';
+            const displayName = reply.name || 'Anónimo';
+
             // Crear sección de archivo para reply si hay imagen
             const replyFileSection = reply.imageUrl ? `
                 <div class="post-header-file">
@@ -441,10 +487,10 @@ async function loadLastReplies(threadId, totalReplies, threadPostId) {
                         ${reply.imageUrl ? `<img src="${reply.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
                     </div>
                     <div class="reply-header">
-                        <span class="name">${reply.name || 'Anónimo'}</span>
+                        <span class="name ${nameClass}">${displayName}</span>
                         <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                         <span class="id" onclick="quotePost('${reply.postId || 'N/A'}', '${threadPostId}')" style="cursor: pointer;">No.${reply.postId || 'N/A'}</span>
-                        [<button class="report-btn" onclick="reportPost('${threadId}', 'reply', ${reply.postId}, '${encodeURIComponent(reply.name || 'Anónimo')}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
+                        [<button class="report-btn" onclick="reportPost('${threadId}', 'reply', ${reply.postId}, '${encodeURIComponent(displayName)}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
                     </div>
                     <div class="comment">${processText(reply.comment)}</div>
                 </div>

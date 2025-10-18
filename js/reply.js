@@ -20,7 +20,35 @@ document.addEventListener('DOMContentLoaded', () => {
     loadThread();
     setupNavigation();
     loadQuoteFromURL();
+    checkAdminStatusForForm();
+    
+    // Escuchar cambios en el localStorage para actualizar el formulario
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'adminAuthenticated') {
+            checkAdminStatusForForm();
+        }
+    });
 });
+
+// Función para verificar si es admin y modificar el formulario
+function checkAdminStatusForForm() {
+    const isAdmin = localStorage.getItem('adminAuthenticated') === 'true';
+    const nameField = document.getElementById('replyName');
+    
+    if (nameField) {
+        if (isAdmin) {
+            nameField.value = 'Administrador';
+            nameField.placeholder = 'Administrador';
+            nameField.disabled = true;
+            nameField.classList.add('admin-field');
+        } else {
+            nameField.value = '';
+            nameField.placeholder = 'Anónimo';
+            nameField.disabled = false;
+            nameField.classList.remove('admin-field');
+        }
+    }
+}
 
 function setupNavigation() {
     const backLinks = document.querySelectorAll('#backLink');
@@ -194,6 +222,10 @@ function displayThread(thread, id) {
         (thread.timestamp.toDate ? thread.timestamp.toDate() : new Date(thread.timestamp)) 
         : new Date();
 
+    // Verificar si es post de admin para aplicar estilo especial
+    const nameClass = thread.isAdmin ? 'admin-name' : '';
+    const displayName = thread.name || 'Anónimo';
+
     // Crear sección de archivo si hay imagen
     const fileSection = thread.imageUrl ? `
         <div class="post-header-file">
@@ -212,10 +244,10 @@ function displayThread(thread, id) {
             </div>
             <div class="thread-header">
                 <span class="subject">${thread.subject || ''}</span>
-                <span class="name">${thread.name || 'Anónimo'}</span>
+                <span class="name ${nameClass}">${displayName}</span>
                 <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                 <span class="id" onclick="quotePost('${thread.postId || 'N/A'}', '${thread.postId || 'N/A'}')" style="cursor: pointer;">No.${thread.postId || 'N/A'}</span>
-                [<button class="report-btn" onclick="reportPost('${doc.id}', 'reply', ${thread.postId}, '${encodeURIComponent(thread.name || 'Anónimo')}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
+                [<button class="report-btn" onclick="reportPost('${doc.id}', 'reply', ${thread.postId}, '${encodeURIComponent(displayName)}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
             </div>
             <div class="comment">${processText(thread.comment)}</div>
         </div>
@@ -242,6 +274,10 @@ async function loadReplies() {
                 (reply.timestamp.toDate ? reply.timestamp.toDate() : new Date(reply.timestamp)) 
                 : new Date();
 
+            // Verificar si es post de admin para aplicar estilo especial
+            const nameClass = reply.isAdmin ? 'admin-name' : '';
+            const displayName = reply.name || 'Anónimo';
+
             // Crear sección de archivo para reply si hay imagen
             const replyFileSection = reply.imageUrl ? `
                 <div class="post-header-file">
@@ -258,10 +294,10 @@ async function loadReplies() {
                         ${reply.imageUrl ? `<img src="${reply.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
                     </div>
                     <div class="reply-header">
-                        <span class="name">${reply.name || 'Anónimo'}</span>
+                        <span class="name ${nameClass}">${displayName}</span>
                         <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                         <span class="id" onclick="quotePost('${reply.postId || 'N/A'}', '${threadId}')" style="cursor: pointer;">No.${reply.postId || 'N/A'}</span>
-                        [<button class="report-btn" onclick="reportPost('${doc.id}', 'reply', ${reply.postId}, '${encodeURIComponent(reply.name || 'Anónimo')}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
+                        [<button class="report-btn" onclick="reportPost('${doc.id}', 'reply', ${reply.postId}, '${encodeURIComponent(displayName)}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
                     </div>
                     <div class="comment">${processText(reply.comment)}</div>
                 </div>
@@ -276,7 +312,15 @@ async function loadReplies() {
 }
 
 window.submitReply = async () => {
-    const name = document.getElementById('replyName').value || 'Anónimo';
+    // Verificar si el administrador está logueado
+    const isAdmin = localStorage.getItem('adminAuthenticated') === 'true';
+    let name = document.getElementById('replyName').value;
+    
+    // Si no se especifica nombre, usar 'Administrador' si es admin, o 'Anónimo' si no
+    if (!name) {
+        name = isAdmin ? 'Administrador' : 'Anónimo';
+    }
+    
     const comment = document.getElementById('replyComment').value;
     const file = document.getElementById('replyFile').files[0];
 
@@ -346,7 +390,8 @@ window.submitReply = async () => {
             postId,
             parentPostId,
             referencedPosts: referencedPostIds,
-            timestamp: serverTimestamp()
+            timestamp: serverTimestamp(),
+            isAdmin: isAdmin  // Marcar si es post de admin
         });
 
         // Incrementar el contador de respuestas en el thread
@@ -461,11 +506,15 @@ async function fetchPostPreview(postId) {
                 (threadData.timestamp.toDate ? threadData.timestamp.toDate() : new Date(threadData.timestamp)) 
                 : new Date();
                 
+            // Verificar si es post de admin para aplicar estilo especial
+            const nameClass = threadData.isAdmin ? 'admin-name' : '';
+            const displayName = threadData.name || 'Anónimo';
+                
             return `
                 <div class="thread thread-op post-preview">
                     <div class="thread-header">
                         <span class="subject">${threadData.subject || ''}</span>
-                        <span class="name">${threadData.name || 'Anónimo'}</span>
+                        <span class="name ${nameClass}">${displayName}</span>
                         <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                         <span class="id">No.${threadData.postId}</span>
                     </div>
@@ -489,10 +538,14 @@ async function fetchPostPreview(postId) {
                 (replyData.timestamp.toDate ? replyData.timestamp.toDate() : new Date(replyData.timestamp)) 
                 : new Date();
                 
+            // Verificar si es post de admin para aplicar estilo especial
+            const nameClass = replyData.isAdmin ? 'admin-name' : '';
+            const displayName = replyData.name || 'Anónimo';
+                
             return `
                 <div class="reply-post post-preview">
                     <div class="reply-header">
-                        <span class="name">${replyData.name || 'Anónimo'}</span>
+                        <span class="name ${nameClass}">${displayName}</span>
                         <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                         <span class="id">No.${replyData.postId}</span>
                     </div>
