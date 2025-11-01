@@ -1,5 +1,6 @@
 // Lista de dominios baneados
 const bannedDomains = [
+    // Sitios para adultos
     'xvideo.com',
     'xvideos.com',
     'pornhub.com',
@@ -9,7 +10,90 @@ const bannedDomains = [
     'tube8.com',
     'spankbang.com',
     'eporner.com',
-    'tnaflix.com'
+    'tnaflix.com',
+    'brazzers.com',
+    'realitykings.com',
+    'bangbros.com',
+    'naughtyamerica.com',
+    
+    // Casas de apuestas
+    'bet365.com',
+    'betway.com',
+    'betfair.com',
+    'williamhill.com',
+    'pokerstars.com',
+    'betsson.com',
+    'bwin.com',
+    '888casino.com',
+    'betclic.com',
+    'codere.com',
+    'marcaapuestas.com',
+    'sportium.es',
+    'betis.com',
+    'paston.es',
+    'luckia.es',
+    'winamax.com',
+    'paf.com',
+    'rushbet.co',
+    'wplay.co',
+    'betplay.com.co',
+    
+    // Sitios de bots y servicios automatizados
+    'discord.gg',
+    'telegram.me',
+    't.me',
+    'bit.ly',
+    'tinyurl.com',
+    'shorturl.at',
+    'cutt.ly',
+    'rb.gy',
+    'is.gd',
+    'v.gd',
+    
+    // Sitios de referidos y MLM
+    'binance.com',
+    'coinbase.com',
+    'crypto.com',
+    'bybit.com',
+    'kucoin.com',
+    
+    // Sitios de encuestas y rewards
+    'swagbucks.com',
+    'earnhoney.com',
+    'prizerebel.com',
+    'inboxdollars.com',
+    'toluna.com',
+    
+    // Sitios de descarga dudosos
+    'rapidgator.net',
+    'uploaded.net',
+    'nitroflare.com',
+    'turbobit.net',
+    'depositfiles.com',
+    'filefactory.com',
+    
+    // Sitios de streaming pirata
+    'cuevana.com',
+    'pelisplus.com',
+    'repelis.com',
+    'gnula.com',
+    'cinecalidad.com',
+    'pelispedia.com',
+    
+    // Sitios de phishing comunes
+    'secure-paypal.com',
+    'paypal-security.com',
+    'amazon-security.com',
+    'facebook-security.com',
+    'google-security.com',
+    
+    // Otros sitios problemáticos
+    'onlyfans.com',
+    'chaturbate.com',
+    'cam4.com',
+    'livejasmin.com',
+    'bongacams.com',
+    'stripchat.com'
 ];
 
 // Función para escapar HTML
@@ -359,7 +443,7 @@ window.highlightPost = async (postId, board = null) => {
         console.log(`Post ${postId} no encontrado en la página actual`);
         const currentBoard = getCurrentBoard();
         if (currentBoard) {
-            window.location.href = `reply.html?board=${encodeURIComponent(currentBoard)}&thread=${encodeURIComponent(postId)}`;
+            await navigateToPost(currentBoard, postId);
         }
     }
 };

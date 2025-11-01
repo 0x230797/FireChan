@@ -7,6 +7,18 @@ const urlParams = new URLSearchParams(window.location.search);
 const currentBoard = urlParams.get('board');
 const threadId = urlParams.get('thread');
 
+// Función para obtener o generar ID único del usuario
+function getUserUniqueId() {
+    let userId = localStorage.getItem('userUniqueId');
+    if (!userId) {
+        userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem('userUniqueId', userId);
+        localStorage.setItem('userFirstVisit', new Date().toISOString());
+    }
+    localStorage.setItem('userLastVisit', new Date().toISOString());
+    return userId;
+}
+
 // Función para formatear el tamaño del archivo
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
@@ -391,7 +403,9 @@ window.submitReply = async () => {
             parentPostId,
             referencedPosts: referencedPostIds,
             timestamp: serverTimestamp(),
-            isAdmin: isAdmin  // Marcar si es post de admin
+            isAdmin: isAdmin,  // Marcar si es post de admin
+            userId: getUserUniqueId(),  // Agregar ID único del usuario
+            board: currentBoard  // Agregar board para estadísticas
         });
 
         // Incrementar el contador de respuestas en el thread

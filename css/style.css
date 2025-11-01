@@ -1,51 +1,50 @@
 /* ========== VARIABLES DE COLOR ========== */
 :root {
-    --primary-bg: #d6daf0;
-    --primary-border: #b7c5d9;
-    --text-dark: #34345c;
-    --text-accent: #af0a0f;
-    --accent-hover: #d00;
+    --bg: #d6daf0;
+    --border: #b7c5d9;
+    --hyperlink: #34345c;
+    --hyperlink-hover: #d00;
+    --title: #af0a0f;
     --text-green: #117743;
     --text-red: #771111;
     --text-gray: #666;
     --text-light-gray: #89a;
-    --success-bg: #ffe6e6;
+    --bg-disclaimer: #ffe6e6;
 }
 
 /* ========== RESET Y ESTILOS GENERALES ========== */
 a, a:visited {
-    color: var(--text-dark);
+    color: var(--hyperlink);
     text-decoration: none;
 }
 
 a:active, a:hover {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
     text-decoration: none;
 }
 
 /* ========== HEADER Y NAVEGACIÓN ========== */
 .header,
 .nav {
-    background-color: var(--primary-bg);
-    border-bottom: 1px solid var(--primary-border);
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--border);
     padding: 10px;
     text-align: center;
 }
 
-.nav {
-    padding: 5px 10px;
-}
-
 .header h1 {
-    color: var(--text-accent);
-    font-size: 24pt;
+    color: var(--title);
+    font-size: 20pt;
     font-weight: bold;
-    margin-bottom: 5px;
 }
 
 .header .subtitle {
     color: var(--text-light-gray);
-    font-size: 9pt;
+    font-size: 10pt;
+}
+
+.nav {
+    padding: 5px 0;
 }
 
 .nav a {
@@ -54,7 +53,7 @@ a:active, a:hover {
 }
 
 .nav a:hover {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
 }
 
 /* ========== CONTENEDOR PRINCIPAL ========== */
@@ -64,35 +63,28 @@ a:active, a:hover {
     padding: 0 5px;
 }
 
-/* ========== TABLONES (INDEX) ========== */
-.intro {
-    background-color: var(--primary-bg);
-    border: 1px solid var(--primary-border);
+/* ========== SECCIONES ========== */
+.intro,
+.stats-panel,
+.stats-section {
+    background-color: var(--bg);
+    border: 1px solid var(--border);
     padding: 15px;
     margin-bottom: 20px;
-    text-align: center;
 }
 
-.intro h2 {
-    color: #0f0c5d;
-    font-size: 20pt;
-    margin-bottom: 10px;
-}
-
+/* ========== TABLONES (INDEX) ========== */
 .boards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 15px;
-    margin-top: 20px;
+    gap: 20px;
+    margin-bottom: 20px;
 }
 
 .board-card {
-    background-color: var(--primary-bg);
-    border: 1px solid var(--primary-border);
+    background-color: var(--bg);
+    border: 1px solid var(--border);
     padding: 15px;
-    color: #000;
-    cursor: pointer;
-    transition: background-color 0.2s;
 }
 
 .board-card:hover {
@@ -103,31 +95,105 @@ a:active, a:hover {
     color: #0f0c5d;
     font-size: 20pt;
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 .board-name {
-    color: var(--text-accent);
+    color: var(--title);
     font-size: 15pt;
     margin-bottom: 10px;
 }
 
 .board-desc {
     color: var(--text-gray);
-    font-size: 10pt;
+    font-size: 12pt;
     line-height: 1.4;
+}
+
+/* ========== SECCIÓN DE ESTADÍSTICAS ========== */
+.intro h2,
+.stats-section h2,
+.stats-panel h2 {
+    color: var(--title);
+    font-size: 18pt;
+    font-weight: bold;
+    text-align: center;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.stat-label {
+    color: var(--hyperlink);
+    font-size: 11pt;
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Estilos para el loading */
+.stats-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--text-gray);
+    font-size: 12pt;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top: 2px solid var(--title);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Estilos para error */
+.stats-error {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-red);
+    font-size: 12pt;
+}
+
+.retry-btn {
+    background-color: var(--title);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 11pt;
+    border-radius: 3px;
+}
+
+.retry-btn:hover {
+    background-color: var(--hyperlink-hover);
 }
 
 /* ========== FORMULARIO DE POST ========== */
 .post-form {
-    background-color: var(--primary-bg);
-    border: 1px solid var(--primary-border);
+    background-color: var(--bg);
+    border: 1px solid var(--border);
     padding: 10px;
     margin-bottom: 20px;
 }
 
 .post-form h3 {
-    color: #0f0c5d;
+    color: #af0a0f;
     margin-bottom: 10px;
 }
 
@@ -164,17 +230,14 @@ a:active, a:hover {
 }
 
 .post-form button {
-    border: 1px solid #0f0c5d;
+    border: 1px solid var(--border);
     color: #0f0c5d;
     padding: 5px 10px;
     cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s;
 }
 
 .post-form button:hover {
-    border: 1px solid #d00;
-    color: #d00;
+    background-color: #c5cfe0;
 }
 
 /* ========== THREADS Y POSTS ========== */
@@ -190,8 +253,8 @@ a:active, a:hover {
 .reply-post,
 .report-container {
     display: table;
-    background-color: var(--primary-bg);
-    border: 1px solid var(--primary-border);
+    background-color: var(--bg);
+    border: 1px solid var(--border);
     padding: 10px;
     margin-bottom: 10px;
     overflow: auto;
@@ -200,7 +263,6 @@ a:active, a:hover {
 .thread-preview,
 .board-card {
     cursor: pointer;
-    transition: background-color 0.2s;
 }
 
 .thread-preview:hover,
@@ -253,7 +315,6 @@ a:active, a:hover {
 }
 
 .post-header-file {
-    font-size: 10pt;
     color: #474848;
 }
 
@@ -274,6 +335,7 @@ a:active, a:hover {
 
 .comment {
     color: #3a3a3a;
+    margin-bottom: 5px;
 }
 
 .post-message {
@@ -298,12 +360,12 @@ a:active, a:hover {
 }
 
 .post-reference {
-    color: var(--text-dark);
+    color: var(--hyperlink);
     cursor: pointer;
 }
 
 .post-reference:hover {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
 }
 
 .board-reference {
@@ -312,39 +374,39 @@ a:active, a:hover {
 }
 
 .board-reference:hover {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
 }
 
 .url-link {
-    color: var(--text-dark);
+    color: var(--hyperlink);
 }
 
 .url-link:hover {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
 }
 
 .banned-url {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
     font-weight: bold;
 }
 
 .id {
-    color: var(--text-dark);
+    color: var(--hyperlink);
     font-weight: bold;
 }
 
 .id:hover {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
 }
 
 .backlink {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
     font-size: 8pt;
     margin-left: 5px;
 }
 
 .backlink a {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
     text-decoration: none;
 }
 
@@ -357,16 +419,15 @@ a:active, a:hover {
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--text-dark);
-    transition: color 0.2s;
+    color: var(--hyperlink);
 }
 
 .report-btn:hover {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
 }
 
 .delete-btn {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
     background: none;
     border: none;
     cursor: pointer;
@@ -376,14 +437,13 @@ a:active, a:hover {
 .back-link {
     display: inline-block;
     margin-bottom: 15px;
-    color: var(--text-dark);
+    color: var(--hyperlink);
     text-decoration: none;
     font-weight: bold;
-    transition: color 0.2s;
 }
 
 .back-link:hover {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
 }
 
 /* ========== LIGHTBOX ========== */
@@ -413,8 +473,8 @@ a:active, a:hover {
 /* ========== TOOLTIPS Y PREVIEWS ========== */
 .post-preview-tooltip {
     position: fixed;
-    background-color: var(--primary-bg);
-    border: 1px solid var(--primary-border);
+    background-color: var(--bg);
+    border: 1px solid var(--border);
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     z-index: 9999;
     padding: 8px;
@@ -452,7 +512,7 @@ a:active, a:hover {
 }
 
 .post-preview-tooltip .board-indicator {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
     font-weight: bold;
     margin-right: 5px;
 }
@@ -460,12 +520,12 @@ a:active, a:hover {
 .post-preview-tooltip .preview-footer {
     margin-top: 8px;
     padding-top: 5px;
-    border-top: 1px solid var(--primary-border);
+    border-top: 1px solid var(--border);
     text-align: right;
 }
 
 .post-preview-tooltip .preview-footer a {
-    color: var(--text-dark);
+    color: var(--hyperlink);
     text-decoration: none;
     font-size: 8pt;
 }
@@ -476,7 +536,6 @@ a:active, a:hover {
 
 .post-preview-tooltip .post-header-file {
     color: #474848;
-    font-size: 9pt;
     margin-bottom: 5px;
 }
 
@@ -489,7 +548,7 @@ a:active, a:hover {
 /* ========== PANEL ADMIN / LOGIN ========== */
 .login-panel {
     background-color: #ffe;
-    border: 2px solid var(--accent-hover);
+    border: 2px solid var(--hyperlink-hover);
     padding: 20px;
     max-width: 400px;
     margin: 50px auto;
@@ -497,7 +556,7 @@ a:active, a:hover {
 }
 
 .login-panel h2 {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
     margin-bottom: 15px;
 }
 
@@ -510,14 +569,13 @@ a:active, a:hover {
 }
 
 .login-panel button {
-    background-color: var(--accent-hover);
+    background-color: var(--hyperlink-hover);
     color: #fff;
     border: none;
     padding: 10px 30px;
     cursor: pointer;
     font-weight: bold;
     margin-top: 10px;
-    transition: background-color 0.2s;
 }
 
 .login-panel button:hover {
@@ -531,13 +589,6 @@ a:active, a:hover {
 
 .admin-content.active {
     display: block;
-}
-
-.stats-panel {
-    background-color: var(--primary-bg);
-    border: 1px solid var(--primary-border);
-    padding: 15px;
-    margin-bottom: 20px;
 }
 
 .stats-panel h3 {
@@ -555,7 +606,7 @@ a:active, a:hover {
 .stat-card {
     background-color: #fff;
     padding: 15px;
-    border: 1px solid var(--primary-border);
+    border: 1px solid var(--border);
     text-align: center;
 }
 
@@ -571,8 +622,8 @@ a:active, a:hover {
 }
 
 .board-selector {
-    background-color: var(--primary-bg);
-    border: 1px solid var(--primary-border);
+    background-color: var(--bg);
+    border: 1px solid var(--border);
     padding: 10px;
     margin-bottom: 20px;
 }
@@ -583,11 +634,10 @@ a:active, a:hover {
 }
 
 .board-selector button {
-    background-color: var(--primary-bg);
-    border: 1px solid var(--primary-border);
+    background-color: var(--bg);
+    border: 1px solid var(--border);
     padding: 5px 15px;
     cursor: pointer;
-    transition: background-color 0.2s;
 }
 
 .board-selector button:hover {
@@ -595,14 +645,14 @@ a:active, a:hover {
 }
 
 .content-list {
-    background-color: var(--primary-bg);
-    border: 1px solid var(--primary-border);
+    background-color: var(--bg);
+    border: 1px solid var(--border);
     padding: 10px;
 }
 
 .content-item {
     background-color: #fff;
-    border: 1px solid var(--primary-border);
+    border: 1px solid var(--border);
     padding: 10px;
     margin-bottom: 10px;
 }
@@ -637,7 +687,7 @@ a:active, a:hover {
 
 .content-image img {
     max-width: 100%;
-    border: 1px solid var(--primary-border);
+    border: 1px solid var(--border);
 }
 
 /* ========== TABS ========== */
@@ -648,12 +698,11 @@ a:active, a:hover {
 }
 
 .tab {
-    background-color: var(--primary-bg);
-    border: 1px solid var(--primary-border);
+    background-color: var(--bg);
+    border: 1px solid var(--border);
     padding: 10px 20px;
     cursor: pointer;
     font-weight: bold;
-    transition: all 0.2s;
 }
 
 .tab:hover {
@@ -698,11 +747,11 @@ a:active, a:hover {
 
 /* ========== PÁGINA DE REGLAS ========== */
 .rules-content h2 {
-    color: var(--text-accent);
+    color: var(--title);
     font-size: 18pt;
     margin-bottom: 20px;
     text-align: center;
-    border-bottom: 2px solid var(--primary-bg);
+    border-bottom: 2px solid var(--bg);
     padding-bottom: 10px;
 }
 
@@ -711,7 +760,7 @@ a:active, a:hover {
 }
 
 .rules-section h3 {
-    color: var(--text-accent);
+    color: var(--title);
     font-size: 14pt;
     margin-bottom: 10px;
 }
@@ -721,7 +770,7 @@ a:active, a:hover {
 }
 
 .rule-item strong {
-    color: var(--text-accent);
+    color: var(--title);
 }
 
 .board-rules {
@@ -729,7 +778,7 @@ a:active, a:hover {
 }
 
 .board-rules h4 {
-    color: var(--text-accent);
+    color: var(--title);
     font-size: 12pt;
     margin-bottom: 5px;
 }
@@ -745,12 +794,12 @@ a:active, a:hover {
 }
 
 .disclaimer {
-    background-color: var(--success-bg);
+    background-color: var(--bg-disclaimer);
     padding: 15px;
 }
 
 .disclaimer h3 {
-    color: var(--text-accent);
+    color: var(--title);
     font-size: 12pt;
     margin-bottom: 10px;
 }
@@ -778,12 +827,12 @@ a:active, a:hover {
 }
 
 .omitted-replies a {
-    color: var(--text-dark);
+    color: var(--hyperlink);
     text-decoration: none;
 }
 
 .omitted-replies a:hover {
-    color: var(--accent-hover);
+    color: var(--hyperlink-hover);
 }
 
 .loading {
@@ -806,6 +855,23 @@ a:active, a:hover {
 @media (max-width: 768px) {
     .boards-grid {
         grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 15px 10px;
+    }
+
+    .stat-number {
+        font-size: 20pt;
+    }
+
+    .stat-label {
+        font-size: 10pt;
     }
 
     .reply-post {

@@ -23,7 +23,7 @@
         <div class="intro">
             <h2>Tablones</h2>
             <p>Explora nuestros tablones temáticos y únete a las conversaciones. Puedes ver hilos existentes o crear nuevos posts.</p>
-            <p>¿Tienes dudas, sugerencias o comentarios sobre FireChan? Compártelos en <a href="thread.html?board=me">/me/ Meta</a> - tu feedback es importante para nosotros.</p>
+            <p>¿Tienes dudas, sugerencias o comentarios sobre FireChan? Compártelos en <a href="thread.html?board=me"><b>/me/ Meta</b></a> - tu feedback es importante para nosotros.</p>
         </div>
 
         <div class="boards-grid">
@@ -64,10 +64,32 @@
             </a>
         </div>
 
+        <div class="stats-section">
+            <h2>Estadísticas del Sitio</h2>
+            <div id="stats-container">
+                <div class="stats-loading">
+                    <div class="loading-spinner"></div>
+                    <span>Cargando estadísticas...</span>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div class="footer">
         <p>Todo el contenido publicado es ficticio y se proporciona únicamente con fines de entretenimiento.</p>
     </div>
+
+    <script type="module">
+        import { displayStats } from './js/stats.js';
+        
+        // Cargar estadísticas al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            displayStats();
+        });
+
+        // Hacer displayStats global para el botón de reintentar
+        window.displayStats = displayStats;
+    </script>
 </body>
 </html>

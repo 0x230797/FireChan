@@ -3,6 +3,18 @@ import { collection, addDoc, query, where, orderBy, getDocs, serverTimestamp, do
 import { uploadConfig, imgbbConfig } from './config.js';
 import { processText } from './text-processor.js';
 
+// Función para obtener o generar ID único del usuario
+function getUserUniqueId() {
+    let userId = localStorage.getItem('userUniqueId');
+    if (!userId) {
+        userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem('userUniqueId', userId);
+        localStorage.setItem('userFirstVisit', new Date().toISOString());
+    }
+    localStorage.setItem('userLastVisit', new Date().toISOString());
+    return userId;
+}
+
 const urlParams = new URLSearchParams(window.location.search);
 const currentBoard = urlParams.get('board');
 
@@ -294,7 +306,8 @@ window.submitThread = async () => {
             postId,
             timestamp: serverTimestamp(),
             replyCount: 0,
-            isAdmin: isAdmin  // Marcar si es post de admin
+            isAdmin: isAdmin,  // Marcar si es post de admin
+            userId: getUserUniqueId()  // Agregar ID único del usuario
         });
 
         alert('Thread creado exitosamente!');

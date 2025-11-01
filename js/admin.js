@@ -104,6 +104,35 @@ async function loadStats() {
         document.getElementById('totalReplies').textContent = repliesSnapshot.size;
         document.getElementById('totalReports').textContent = reportsSnapshot.size;
 
+        // Calcular estadísticas de archivos
+        let totalFiles = 0;
+        let totalFileSize = 0;
+
+        // Contar archivos en threads
+        threadsSnapshot.forEach(doc => {
+            const thread = doc.data();
+            if (thread.imageUrl) {
+                totalFiles++;
+                if (thread.fileSize) {
+                    totalFileSize += thread.fileSize;
+                }
+            }
+        });
+
+        // Contar archivos en replies
+        repliesSnapshot.forEach(doc => {
+            const reply = doc.data();
+            if (reply.imageUrl) {
+                totalFiles++;
+                if (reply.fileSize) {
+                    totalFileSize += reply.fileSize;
+                }
+            }
+        });
+
+        document.getElementById('totalFiles').textContent = totalFiles;
+        document.getElementById('totalFileSize').textContent = formatFileSize(totalFileSize);
+
         // Calcular posts de hoy
         const today = new Date();
         today.setHours(0, 0, 0, 0);
