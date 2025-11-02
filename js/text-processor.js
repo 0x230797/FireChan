@@ -155,33 +155,33 @@ function processReferences(text, inheritColor = false) {
     let processedText = text;
     const colorStyle = inheritColor ? 'color: inherit;' : '';
     
-    console.log('Processing references for:', text); // Debug log
+
     
     // Primero procesar referencias cross-board con ID (ej: >>/b/123)
     processedText = processedText.replace(/>>\/([\w]+)\/(\d+)/g, (match, board, postId) => {
-        console.log('Found cross-board with ID:', match); // Debug log
+
         return `<span class="post-reference cross-board" data-post-id="${postId}" data-board="${board}" onclick="highlightPost('${postId}', '${board}')" onmouseover="showPostPreview(event, '${postId}', '${board}')" onmouseout="hidePostPreview()">&gt;&gt;/${board}/${postId}</span>`;
     });
     
     // Luego procesar referencias a boards sin ID (ej: >>/b/)
     processedText = processedText.replace(/>>\/([\w]+)\/$/g, (match, board) => {
-        console.log('Found board reference:', match); // Debug log
+
         return `<span class="board-reference" data-board="${board}" onclick="navigateToBoard('${board}')">&gt;&gt;/${board}/</span>`;
     });
     
     // También procesar referencias a boards que están seguidas de espacios o al final de línea
     processedText = processedText.replace(/>>\/([\w]+)\/(?=\s|$)/g, (match, board) => {
-        console.log('Found board reference (with space/end):', match); // Debug log
+
         return `<span class="board-reference" data-board="${board}" onclick="navigateToBoard('${board}')">&gt;&gt;/${board}/</span>`;
     });
     
     // Finalmente procesar referencias locales (ej: >>123)
     processedText = processedText.replace(/>>(\d+)(?![\/\w])/g, (match, postId) => {
-        console.log('Found local reference:', match); // Debug log
+
         return `<span class="post-reference" data-post-id="${postId}" onclick="highlightPost('${postId}')" onmouseover="showPostPreview(event, '${postId}')" onmouseout="hidePostPreview()">&gt;&gt;${postId}</span>`;
     });
     
-    console.log('Result after processing references:', processedText); // Debug log
+
     return processedText;
 }
 
@@ -311,14 +311,14 @@ async function navigateToPost(board, postId) {
     try {
         // Validar parámetros
         if (!board || !postId) {
-            console.error('Parámetros inválidos: board y postId son requeridos');
+
             return false;
         }
 
         // Convertir postId a número
         const numPostId = parseInt(postId);
         if (isNaN(numPostId)) {
-            console.error('postId debe ser un número válido:', postId);
+
             return false;
         }
 
@@ -328,7 +328,7 @@ async function navigateToPost(board, postId) {
             const firebaseConfig = await import('./firebase-config.js');
             db = firebaseConfig.db;
         } catch (importError) {
-            console.error('Error importando firebase-config.js:', importError);
+
             window.location.href = `index.html?board=${encodeURIComponent(board)}`;
             return false;
         }
@@ -338,7 +338,7 @@ async function navigateToPost(board, postId) {
             'https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js'
         );
 
-        console.log(`Buscando post ${numPostId} en /${board}/`);
+
 
         // Búsqueda 1: Verificar si es un thread principal
         try {
@@ -351,13 +351,13 @@ async function navigateToPost(board, postId) {
             const threadsSnapshot = await getDocs(threadsQuery);
 
             if (!threadsSnapshot.empty) {
-                console.log('Post encontrado como thread principal');
+
                 const threadId = threadsSnapshot.docs[0].id;
                 window.location.href = `thread.html?board=${encodeURIComponent(board)}&thread=${encodeURIComponent(threadId)}`;
                 return true;
             }
         } catch (threadError) {
-            console.error('Error buscando en threads:', threadError);
+
         }
 
         // Búsqueda 2: Verificar si es una respuesta
@@ -371,12 +371,12 @@ async function navigateToPost(board, postId) {
             const repliesSnapshot = await getDocs(repliesQuery);
 
             if (!repliesSnapshot.empty) {
-                console.log('Post encontrado como respuesta');
+
                 const replyData = repliesSnapshot.docs[0].data();
                 const threadId = replyData.threadId || replyData.thread;
 
                 if (!threadId) {
-                    console.error('Reply no tiene threadId asociado');
+
                     window.location.href = `index.html?board=${encodeURIComponent(board)}`;
                     return false;
                 }
@@ -385,7 +385,7 @@ async function navigateToPost(board, postId) {
                 return true;
             }
         } catch (replyError) {
-            console.error('Error buscando en replies:', replyError);
+
         }
 
         // Post no encontrado
@@ -394,11 +394,11 @@ async function navigateToPost(board, postId) {
         return false;
 
     } catch (error) {
-        console.error('Error inesperado en navigateToPost:', error);
+
         try {
             window.location.href = `index.html?board=${encodeURIComponent(board || 'general')}`;
         } catch (navError) {
-            console.error('Error crítico en navegación fallback:', navError);
+
         }
         return false;
     }
@@ -406,17 +406,17 @@ async function navigateToPost(board, postId) {
 
 // Función para navegar a un board específico
 window.navigateToBoard = (board) => {
-    console.log(`Navegando al board: /${board}/`);
+
     window.location.href = `thread.html?board=${encodeURIComponent(board)}`;
 };
 
 // Funciones globales para manejo de referencias
 window.highlightPost = async (postId, board = null) => {
-    console.log(`highlightPost llamado: postId=${postId}, board=${board}`);
+
     
     // Si es una referencia cross-board, redirigir directamente a reply.html
     if (board) {
-        console.log(`Referencia cross-board detectada: navegando a /${board}/ thread ${postId}`);
+
         window.location.href = `reply.html?board=${encodeURIComponent(board)}&thread=${encodeURIComponent(postId)}`;
         return;
     }
@@ -427,7 +427,7 @@ window.highlightPost = async (postId, board = null) => {
     
     let postElement = document.querySelector(`[data-post-id="${postId}"]`) || 
                      document.querySelector(`[data-id="${postId}"]`);
-    console.log(`Buscando post por ID: ${postElement ? 'encontrado' : 'no encontrado'}`);
+
     
     if (postElement) {
         const postContainer = postElement.closest('.thread, .reply, .thread-op, .reply-post');
@@ -440,7 +440,7 @@ window.highlightPost = async (postId, board = null) => {
             }, 3000);
         }
     } else {
-        console.log(`Post ${postId} no encontrado en la página actual`);
+
         const currentBoard = getCurrentBoard();
         if (currentBoard) {
             await navigateToPost(currentBoard, postId);
@@ -458,7 +458,7 @@ window.showPostPreview = async (event, postId, board = null) => {
                 showPreviewTooltip(event, preview);
             }
         } catch (error) {
-            console.error('Error al obtener preview cross-board:', error);
+
         }
         return;
     }
@@ -473,7 +473,7 @@ window.showPostPreview = async (event, postId, board = null) => {
                 showPreviewTooltip(event, preview);
             }
         } catch (error) {
-            console.error('Error al obtener preview:', error);
+
         }
         return;
     }
@@ -530,7 +530,7 @@ async function fetchPostPreview(postId, board = null) {
                     return createPostPreviewHTML(data, postId, 'thread', board);
                 }
             } catch (error) {
-                console.log(`Error buscando thread en /${board}/:`, error);
+
             }
             
             try {
@@ -546,7 +546,7 @@ async function fetchPostPreview(postId, board = null) {
                     return createPostPreviewHTML(data, postId, 'reply', board);
                 }
             } catch (error) {
-                console.log(`Error buscando reply en /${board}/:`, error);
+
             }
         } else {
             const currentBoard = getCurrentBoard();
@@ -558,7 +558,7 @@ async function fetchPostPreview(postId, board = null) {
         return createNotFoundHTML(postId, board);
         
     } catch (error) {
-        console.error('Error fetching post preview:', error);
+
         return createErrorHTML(postId, board);
     }
 }

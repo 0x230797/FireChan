@@ -44,6 +44,10 @@
                     <td><span style="font-size:9pt;color:rgb(87 87 87);text-align:right">Antes de realizar una publicación, asegúrate de seguir las <a href="rules.html"><b>reglas</b></a> del tablón.<br>Formatos permitidos: JPG, JPEG, PNG, GIF, WEBP. Tamaño máximo: 5MB.</span></td>
                 </tr>
                 <tr>
+                    <td>Verificación:</td>
+                    <td><div id="captcha-container"></div></td>
+                </tr>
+                <tr>
                     <td></td>
                     <td><button onclick="submitThread()">Publicar</button></td>
                 </tr>
@@ -58,6 +62,8 @@
     </div>
 
     <script type="module" src="js/thread.js"></script>
+    <script type="module" src="js/ban-integration.js"></script>
+    <script type="module" src="js/captcha-system.js"></script>
 
     <div class="footer">
         <p>Todo el contenido publicado es ficticio y se proporciona únicamente con fines de entretenimiento.</p>

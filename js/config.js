@@ -1,8 +1,3 @@
-export const adminConfig = {
-    email: "admin@firechan.org",  // Cambia esto por el correo electrónico del administrador
-    password: "admin123"  // Cambia esto por una contraseña más segura
-};
-
 export const uploadConfig = {
     maxFileSize: 5 * 1024 * 1024, // 5MB en bytes
     allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],

@@ -60,12 +60,6 @@ ol ol, ul ul, ol ul, ul ol {
 }
 
 /* Enlaces */
-a {
-    background-color: transparent;
-    text-decoration: none;
-    color: inherit;
-}
-
 a:active,
 a:hover {
     outline: 0;

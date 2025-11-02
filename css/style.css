@@ -66,11 +66,21 @@ a:active, a:hover {
 /* ========== SECCIONES ========== */
 .intro,
 .stats-panel,
-.stats-section {
+.stats-section,
+.ban-panel,
+.ban-list {
     background-color: var(--bg);
     border: 1px solid var(--border);
     padding: 15px;
     margin-bottom: 20px;
+}
+
+.intro {
+    text-align: center;
+}
+
+.intro a {
+    color: var(--hyperlink);
 }
 
 /* ========== TABLONES (INDEX) ========== */
@@ -113,7 +123,9 @@ a:active, a:hover {
 /* ========== SECCIÓN DE ESTADÍSTICAS ========== */
 .intro h2,
 .stats-section h2,
-.stats-panel h2 {
+.stats-panel h2,
+.ban-panel h2,
+.ban-list h2 {
     color: var(--title);
     font-size: 18pt;
     font-weight: bold;
@@ -215,7 +227,7 @@ a:active, a:hover {
 .post-form textarea {
     width: 100%;
     padding: 4px;
-    border: 1px solid #aaa;
+    border: 1px solid var(--border);
     background-color: #fff;
     box-sizing: border-box;
 }
@@ -306,7 +318,6 @@ a:active, a:hover {
 .thread-header .id,
 .reply-header .id,
 .report-header .id {
-    color: #000;
     font-weight: normal;
 }
 
@@ -548,7 +559,7 @@ a:active, a:hover {
 /* ========== PANEL ADMIN / LOGIN ========== */
 .login-panel {
     background-color: #ffe;
-    border: 2px solid var(--hyperlink-hover);
+    border: 1px solid var(--hyperlink-hover);
     padding: 20px;
     max-width: 400px;
     margin: 50px auto;
@@ -634,14 +645,14 @@ a:active, a:hover {
 }
 
 .board-selector button {
-    background-color: var(--bg);
+    background-color: #c4cae7;
     border: 1px solid var(--border);
     padding: 5px 15px;
     cursor: pointer;
 }
 
 .board-selector button:hover {
-    background-color: #c5cfe0;
+    background-color: #afb8e7;
 }
 
 .content-list {
@@ -723,18 +734,6 @@ a:active, a:hover {
 }
 
 /* ========== REPORTES ========== */
-.report-item {
-    border-left: 4px solid #7d2d2f;
-}
-
-.reported-content {
-    background-color: #f5f5f5;
-    padding: 10px;
-    margin-top: 10px;
-    border-radius: 4px;
-    border-left: 3px solid #7d2d2f;
-}
-
 .admin-item-header div {
     display: flex;
     gap: 10px;
@@ -922,4 +921,16 @@ a:active, a:hover {
     .board-rules h4 {
         font-size: 11pt;
     }
+}
+
+/* ========== ESTILOS PARA IPS EN ADMIN ========== */
+.ip {
+    background-color: var(--bg);
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    margin: 0 2px;
+}
+
+.ip:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }

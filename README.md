@@ -4,21 +4,49 @@ FireChan es un imageboard estilo 4chan/2chan desarrollado con tecnologías web m
 
 ## Características
 
+### Funcionalidades Core
 - **Múltiples tablones temáticos**: Anime, Tecnología, Videojuegos, Política, Paranormal y más
 - **Sistema de publicaciones y respuestas**: Publica contenido y responde a otros usuarios
 - **Soporte de imágenes**: Integración con ImgBB para subir y almacenar imágenes
-- **Formato de texto enriquecido**: Soporta greentext, citas, enlaces y formato especial
-- **Panel de administración**: Gestiona publicaciones, respuestas y reportes
-- **Sistema de reportes**: Los usuarios pueden reportar contenido inapropiado
+- **Formato de texto enriquecido**: Soporta greentext, citas, enlaces y referencias cruzadas
 - **Diseño responsive**: Funciona en dispositivos móviles y escritorio
 - **Lightbox para imágenes**: Visualiza imágenes en pantalla completa
 
+### Moderación y Administración
+- **Panel de administración completo**: Gestiona publicaciones, respuestas y reportes
+- **Firebase Authentication**: Sistema de autenticación seguro para administradores
+- **Sistema de reportes**: Los usuarios pueden reportar contenido inapropiado
+- **Sistema de baneos por IP**: Banea IPs con duración configurable y razones específicas
+- **Visualización de IPs**: Los administradores pueden ver y copiar IPs de usuarios con ipify
+- **Gestión de baneos**: Interface para ver, agregar y remover baneos activos
+- **Estadísticas del sitio**: Métricas completas de uso y actividad
+
+### Seguridad y Anti-Spam
+- **Sistema CAPTCHA matemático**: Verificación anti-spam simple pero efectiva
+- **Validación doble**: Cliente + servidor con tokens únicos Firebase
+- **Sistema de baneos automático**: Ban por múltiples fallos de CAPTCHA
+- **Prevención de ataques**: Registro de intentos fallidos por IP
+- **Overlay anti-duplicados**: Sistema mejorado de notificaciones de ban
+
+### Características Técnicas
+- **Arquitectura modular**: Código refactorizado con utilidades centralizadas
+- **Sistema de integración de baneos**: Verificación automática antes de cada acción
+- **Overlay completo para usuarios baneados**: Interface profesional para usuarios restringidos
+- **Firebase Auth integrado**: Autenticación segura reemplaza sistema hardcodeado
+
 ## Tecnologías Utilizadas
 
-- HTML5, CSS3, JavaScript (ES6+)
-- Firebase Firestore (Base de datos)
-- ImgBB API (Almacenamiento de imágenes)
-- Diseño inspirado en imageboards clásicos
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+ con módulos)
+- **Base de datos**: Firebase Firestore con transacciones y queries optimizados
+- **Autenticación**: Firebase Authentication para administradores
+- **Almacenamiento**: ImgBB API para hosting de imágenes
+- **Arquitectura**: Sistema modular con utilidades centralizadas
+- **Seguridad**: Sistema CAPTCHA matemático con validación dual
+- **APIs externas**: 
+  - ipify.org para detección de IP
+  - ImgBB para almacenamiento de imágenes
+  - Firebase Auth para autenticación segura
+- **Diseño**: Inspirado en imageboards clásicos con mejoras modernas
 
 ## Requisitos Previos
 
@@ -46,12 +74,17 @@ cd FireChan
    - Crea una base de datos en modo de producción
    - Configura las reglas de seguridad según tus necesidades
 
-4. Obtén las credenciales de tu proyecto:
+4. Habilita Firebase Authentication:
+   - Ve a "Authentication" > "Sign-in method"
+   - Habilita "Email/Password"
+   - Agrega dominios autorizados si es necesario
+
+5. Obtén las credenciales de tu proyecto:
    - Ve a Configuración del proyecto > Tus aplicaciones
    - Registra una aplicación web
    - Copia la configuración de Firebase
 
-5. Configura el archivo `js/firebase-config.js` con tus credenciales:
+6. Configura el archivo `js/firebase-config.js` con tus credenciales:
 
 ```javascript
 const firebaseConfig = {
@@ -77,18 +110,25 @@ export const imgbbConfig = {
 };
 ```
 
-### 4. Configurar Credenciales de Administrador
+### 4. Configurar Administradores Autorizados
 
-Abre `js/config.js` y personaliza las credenciales del panel admin:
+1. Abre el archivo `js/firebase-auth.js`
+2. Actualiza la lista de emails autorizados como administradores:
 
 ```javascript
-export const adminConfig = {
-    email: "tu-email@dominio.com",
-    password: "tu-contraseña-segura"
-};
+const AUTHORIZED_ADMINS = [
+    'admin@firechan.org',
+    'tu-email@dominio.com',  // Agrega tu email aquí
+    // Agregar más emails de administradores aquí
+];
 ```
 
-**Importante**: Estas credenciales se almacenan en el cliente. Para producción, considera implementar Firebase Authentication.
+3. **Crear primera cuenta de administrador**:
+   - Accede a `admin.html`
+   - Usa el botón "Crear Cuenta" para crear tu primera cuenta
+   - O usa la función `createAdminAccount()` desde la consola del navegador
+
+**Seguro**: Las credenciales se manejan completamente por Firebase Authentication.
 
 ### 5. Desplegar el Sitio
 
@@ -102,20 +142,27 @@ Puedes desplegar en:
 
 ```
 FireChan/
-├── index.html          # Página principal con tablones
-├── thread.html         # Vista de publicaciones de un tablón
-├── reply.html          # Vista de publicación individual con respuestas
-├── admin.html          # Panel de administración
-├── rules.html          # Reglas del sitio
+├── index.html              # Página principal con tablones
+├── thread.html             # Vista de publicaciones de un tablón
+├── reply.html              # Vista de publicación individual con respuestas
+├── admin.html              # Panel de administración completo
+├── rules.html              # Reglas del sitio
 ├── css/
-│   └── style.css       # Estilos principales
+│   ├── style.css           # Estilos principales
+│   └── reset.css           # Reset CSS
 ├── js/
-│   ├── firebase-config.js  # Configuración de Firebase (crear)
+│   ├── firebase-config.js  # Configuración de Firebase
+│   ├── firebase-auth.js    # Sistema de autenticación Firebase
 │   ├── config.js           # Configuración general
+│   ├── utils.js            # Utilidades centralizadas
 │   ├── thread.js           # Lógica de publicaciones
 │   ├── reply.js            # Lógica de respuestas
-│   ├── admin.js            # Lógica del panel admin
-│   └── text-processor.js   # Procesamiento de texto (greentext, etc.)
+│   ├── admin.js            # Panel admin con gestión de IPs
+│   ├── text-processor.js   # Procesamiento de texto y referencias
+│   ├── ip-ban-system.js    # Sistema de baneos por IP
+│   ├── ban-integration.js  # Integración automática de baneos
+│   ├── captcha-system.js   # Sistema CAPTCHA matemático anti-spam
+│   └── stats.js            # Estadísticas del sitio
 └── README.md
 ```
 
@@ -130,9 +177,21 @@ FireChan/
 
 ### Para Administradores
 
-1. Accede a `admin.html`
-2. Inicia sesión con las credenciales configuradas
-3. Gestiona publicaciones, respuestas y reportes desde el panel
+1. **Acceso al panel**: Accede a `admin.html`
+2. **Iniciar sesión**: Usa Firebase Authentication (email/password)
+3. **Gestión de contenido**: 
+   - Ver y eliminar publicaciones y respuestas
+   - Gestionar reportes de usuarios
+   - Ver estadísticas completas del sitio
+4. **Sistema de baneos**:
+   - Ver IPs de todos los usuarios (clic para copiar)
+   - Banear IPs con duración configurable (1 hora - permanente)
+   - Gestionar lista de IPs baneadas
+   - Razones predefinidas: Spam, Contenido inapropiado, Trolling, Flood, etc.
+5. **Sistema CAPTCHA**:
+   - Automáticamente protege contra spam
+   - Baneos automáticos por múltiples fallos
+   - Sin configuración adicional requerida
 
 ## Personalización
 
@@ -147,17 +206,25 @@ Edita los archivos HTML (`index.html`, `thread.html`, etc.) para agregar o quita
 </a>
 ```
 
+### Configurar Sistema de Baneos
+
+En `ip-ban-system.js` puedes modificar:
+
+```javascript
+// Duraciones predefinidas (en milisegundos)
+export const BanDurations = {
+    HOUR_1: 60 * 60 * 1000,
+    DAY_1: 24 * 60 * 60 * 1000,
+    WEEK_1: 7 * 24 * 60 * 60 * 1000,
+    MONTH_1: 30 * 24 * 60 * 60 * 1000,
+    PERMANENT: null
+};
+```
+
 ### Estilos
 
 Modifica `css/style.css` para personalizar colores, fuentes y diseño.
-
-## Seguridad
-
-- Las credenciales de admin actuales son básicas y solo para desarrollo
-- Para producción, implementa autenticación real con Firebase Auth
-- Configura correctamente las reglas de Firestore
-- Valida y sanitiza todo el input del usuario
-- Considera implementar CAPTCHA para prevenir spam
+El sistema de baneos incluye estilos específicos para overlays y notificaciones.
 
 ## Reglas de Firestore Recomendadas
 
@@ -165,18 +232,70 @@ Modifica `css/style.css` para personalizar colores, fuentes y diseño.
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Threads - lectura pública, escritura libre (temporalmente)
     match /threads/{document=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if true; // Para desarrollo - restringir en producción
     }
+    
+    // Respuestas - lectura pública, escritura libre (temporalmente)
     match /replies/{document=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if true; // Para desarrollo - restringir en producción
+    }
+    
+    // Reportes - lectura y escritura pública para permitir reportar
+    match /reports/{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Sistema de baneos - solo lectura pública, escritura restringida
+    match /ip_bans/{document=**} {
+      allow read: if true;
+      allow write: if false; // Solo via admin o server-side
+    }
+    
+    // Contadores - lectura pública, escritura libre para IDs
+    match /counters/{document=**} {
+      allow read, write: if true;
     }
   }
 }
 ```
 
+### Reglas de Producción Recomendadas
+
+Para un entorno de producción más seguro, considera estas reglas más restrictivas:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Validación básica de rate limiting y tamaño de contenido
+    function isValidContent(data) {
+      return data.comment.size() <= 2000 && 
+             data.name.size() <= 50;
+    }
+    
+    match /threads/{document=**} {
+      allow read: if true;
+      allow create: if isValidContent(resource.data);
+      allow update, delete: if false; // Solo admin
+    }
+    
+    match /replies/{document=**} {
+      allow read: if true;
+      allow create: if isValidContent(resource.data);
+      allow update, delete: if false; // Solo admin
+    }
+    
+    match /ip_bans/{document=**} {
+      allow read: if true;
+      allow write: if false; // Solo server-side functions
+    }
+  }
+}
+```
 ## Contribuciones
 
 Las contribuciones son bienvenidas. Por favor:
@@ -189,16 +308,12 @@ Las contribuciones son bienvenidas. Por favor:
 
 ## Licencia
 
-Este proyecto es de código abierto y está disponible bajo los términos que definas.
+Este proyecto es de código abierto bajo MIT License.
 
 ## Disclaimer
 
-Todo el contenido publicado es ficticio y se proporciona únicamente con fines de entretenimiento. Los administradores del sitio no son responsables del contenido generado por los usuarios.
-
-## Soporte
-
-Si tienes problemas o sugerencias, usa el tablón `/me/ Meta` dentro de la aplicación o abre un issue en GitHub.
+FireChan es una plataforma de entretenimiento y discusión. Todo el contenido es responsabilidad de los usuarios. Los administradores se reservan el derecho de moderar contenido según las reglas establecidas. El sistema de baneos está implementado para mantener un ambiente seguro y respetuoso.
 
 ---
 
-Desarrollado con ❤️ por 0x230797
+**FireChan** - Desarrollado con ❤️ por [0x230797](https://github.com/0x230797)

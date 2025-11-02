@@ -1,36 +1,51 @@
 import { db } from './firebase-config.js';
 import { collection, query, where, orderBy, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-import { adminConfig } from './config.js';
 import { processText } from './text-processor.js';
-
-// Función para formatear el tamaño del archivo
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
+import { formatFileSize } from './utils.js';
+import { firebaseAuth, showAuthNotification } from './firebase-auth.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    checkAuthState();
+    initializeAuth();
 });
 
-function checkAuthState() {
-    const isAuthenticated = localStorage.getItem('adminAuthenticated') === 'true';
+function initializeAuth() {
+    // Configurar listener para cambios de autenticación
+    firebaseAuth.onAuthStateChange((user, isAdmin) => {
+        if (user && isAdmin) {
+            showAdminPanel(user);
+        } else {
+            showLoginPanel();
+        }
+    });
     
-    if (isAuthenticated) {
-        showAdminPanel();
+    // Verificar estado actual
+    const { user, isAdmin } = firebaseAuth.getCurrentUser();
+    if (user && isAdmin) {
+        showAdminPanel(user);
     } else {
         showLoginPanel();
     }
 }
 
-function showAdminPanel() {
+function showAdminPanel(user) {
     document.getElementById('loginPanel').style.display = 'none';
     document.getElementById('adminContent').style.display = 'block';
+    
+    // Mostrar información del admin autenticado
+    updateAdminInfo(user);
+    
     loadStats();
     loadThreads();
+}
+
+function updateAdminInfo(user) {
+    // Agregar info del admin en el header si existe
+    const adminInfo = document.getElementById('adminInfo');
+    if (adminInfo) {
+        adminInfo.innerHTML = `
+            <span>Bienvenido, ${user.email}</span>
+        `;
+    }
 }
 
 function showLoginPanel() {
@@ -38,19 +53,39 @@ function showLoginPanel() {
     document.getElementById('adminContent').style.display = 'none';
 }
 
-window.login = () => {
+window.login = async () => {
     const email = document.getElementById('adminUser').value.trim();
     const password = document.getElementById('adminPass').value;
+    const loginBtn = document.querySelector('#loginPanel button');
+    
+    // Validación básica
+    if (!email || !password) {
+        showAuthNotification('Por favor ingresa email y contraseña', 'error');
+        return;
+    }
 
-    // Validar credenciales localmente
-    if (email === adminConfig.email && password === adminConfig.password) {
-        // Simular autenticación exitosa
-        localStorage.setItem('adminAuthenticated', 'true');
-        showAdminPanel();
+    // Deshabilitar botón durante el login
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Iniciando sesión...';
+
+    try {
+        const result = await firebaseAuth.signIn(email, password);
         
-        // Limpiar campos
-        document.getElementById('adminUser').value = '';
-        document.getElementById('adminPass').value = '';
+        if (result.success) {
+            showAuthNotification(result.message, 'success');
+            
+            // Limpiar campos
+            document.getElementById('adminUser').value = '';
+            document.getElementById('adminPass').value = '';
+        } else {
+            showAuthNotification(result.message, 'error');
+        }
+    } catch (error) {
+        showAuthNotification('Error inesperado al iniciar sesión', 'error');
+    } finally {
+        // Re-habilitar botón
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Iniciar Sesión';
     }
 };
 
@@ -60,11 +95,69 @@ window.handleEnterKey = (event) => {
     }
 };
 
-window.logout = () => {
-    localStorage.removeItem('adminAuthenticated');
-    showLoginPanel();
-    // Resetear formularios de nombres en otras páginas si existen
-    resetNameFields();
+// Función para restablecer contraseña
+window.resetPassword = async () => {
+    const email = document.getElementById('adminUser').value.trim();
+    
+    if (!email) {
+        showAuthNotification('Por favor ingresa tu email', 'error');
+        return;
+    }
+
+    try {
+        const result = await firebaseAuth.resetPassword(email);
+        
+        if (result.success) {
+            showAuthNotification('Email de restablecimiento enviado. Revisa tu bandeja de entrada.', 'success');
+        } else {
+            showAuthNotification(result.message, 'error');
+        }
+    } catch (error) {
+        showAuthNotification('Error al enviar email de restablecimiento', 'error');
+    }
+};
+
+// Función para crear cuenta de administrador (solo para setup inicial)
+window.createAdminAccount = async () => {
+    const email = prompt('Email del administrador:');
+    const password = prompt('Contraseña (mínimo 6 caracteres):');
+    
+    if (!email || !password) {
+        showAuthNotification('Email y contraseña son requeridos', 'error');
+        return;
+    }
+
+    if (password.length < 6) {
+        showAuthNotification('La contraseña debe tener al menos 6 caracteres', 'error');
+        return;
+    }
+
+    try {
+        const result = await firebaseAuth.createAdminAccount(email, password);
+        
+        if (result.success) {
+            showAuthNotification('Cuenta de administrador creada exitosamente', 'success');
+        } else {
+            showAuthNotification(result.message, 'error');
+        }
+    } catch (error) {
+        showAuthNotification('Error al crear cuenta de administrador', 'error');
+    }
+};
+
+window.logout = async () => {
+    try {
+        const result = await firebaseAuth.signOut();
+        
+        if (result.success) {
+            showAuthNotification(result.message, 'success');
+        }
+        
+        // Resetear formularios de nombres en otras páginas si existen
+        resetNameFields();
+    } catch (error) {
+        showAuthNotification('Error al cerrar sesión', 'error');
+    }
 };
 
 // Función para resetear campos de nombre cuando se cierra sesión
@@ -150,7 +243,7 @@ async function loadStats() {
 
         document.getElementById('totalToday').textContent = postsToday;
     } catch (error) {
-        console.error('Error al cargar estadísticas:', error);
+        // Error al cargar estadísticas
     }
 }
 
@@ -199,6 +292,7 @@ window.loadThreads = async () => {
                             <span class="name ${nameClass}">${displayName}</span>
                             <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                             <span class="id">No.${thread.postId || 'N/A'}</span>
+                            <span class="ip" style="color: #666; font-family: monospace; cursor: pointer; text-decoration: underline;" onclick="copyIP('${thread.userIP}')" title="Clic para copiar IP al portapapeles">IP: ${thread.userIP || 'No disponible'}</span>
                             [<a href="reply.html?board=${thread.board}&thread=${thread.postId}">Ver publicación</a>]
                             <button class="delete-btn" onclick="deleteThread('${doc.id}')">[Eliminar]</button>
                         </div>
@@ -210,7 +304,6 @@ window.loadThreads = async () => {
         
         container.innerHTML = threadsHTML || 'No hay threads';
     } catch (error) {
-        console.error('Error detallado:', error);
         container.innerHTML = 'Error: ' + error.message;
     }
 };
@@ -270,6 +363,7 @@ window.loadReplies = async () => {
                             <span class="name ${nameClass}">${displayName}</span>
                             <span class="date">${timestamp.toLocaleString()}</span>
                             <span class="id">No.${reply.postId || 'N/A'}</span>
+                            <span class="ip" style="color: #666; font-family: monospace; cursor: pointer; text-decoration: underline;" onclick="copyIP('${reply.userIP}')" title="Clic para copiar IP al portapapeles">IP: ${reply.userIP || 'No disponible'}</span>
                             [<a href="reply.html?board=${replyBoard}&thread=${threadPostId}#${reply.postId}">Ver respuesta</a>]
                             <button class="delete-btn" onclick="deleteReply('${doc.id}')">[Eliminar]</button>
                         </div>
@@ -280,7 +374,6 @@ window.loadReplies = async () => {
         
         container.innerHTML = repliesHTML || 'No hay respuestas';
     } catch (error) {
-        console.error('Error detallado:', error);
         container.innerHTML = 'Error: ' + error.message;
     }
 };
@@ -332,12 +425,16 @@ window.switchTab = (tabName) => {
     event.target.classList.add('active');
     
     // Cargar contenido según la pestaña
-    if (tabName === 'threads') {
+    if (tabName === 'statistics') {
+        loadStats();
+    } else if (tabName === 'threads') {
         loadThreads();
     } else if (tabName === 'replies') {
         loadReplies();
     } else if (tabName === 'reports') {
         loadReports();
+    } else if (tabName === 'bans') {
+        loadBanList();
     }
 };
 
@@ -376,14 +473,7 @@ window.loadReports = async () => {
                 (report.timestamp.toDate ? report.timestamp.toDate() : new Date(report.timestamp)) 
                 : new Date();
 
-            // Debug: mostrar información del reporte y mapas
-            console.log('=== PROCESANDO REPORTE ===');
-            console.log('Reporte:', report);
-            console.log('ContentId:', report.contentId);
-            console.log('ThreadId en reporte:', report.threadId);
-            console.log('ThreadId desde reply map:', replyThreadMap[report.contentId]);
-            console.log('ReplyThreadMap completo:', replyThreadMap);
-            console.log('ThreadPostIdMap completo:', threadPostIdMap);
+            // Procesando reporte
 
             // Crear sección de archivo si hay imagen
             const reportFileSection = report.imageUrl ? `
@@ -414,7 +504,6 @@ window.loadReports = async () => {
                     // Verificar si contentId existe en threadPostIdMap (es decir, si es un thread)
                     threadPostId = threadPostIdMap[report.contentId];
                     if (threadPostId) {
-                        console.log('ContentId es en realidad un threadId:', report.contentId);
                         actualThreadId = report.contentId;
                     }
                 }
@@ -430,8 +519,6 @@ window.loadReports = async () => {
                     // Fallback: usar el threadId directamente si no se encuentra el postId
                     contentUrl = `reply.html?board=${report.board}&thread=${actualThreadId || 'unknown'}#${report.postId}`;
                 }
-                
-                console.log('URL construida:', contentUrl);
             }
 
             reportsHTML += `
@@ -446,12 +533,14 @@ window.loadReports = async () => {
                             <span class="name">${report.name || 'Anónimo'}</span>
                             <span class="date">${timestamp.toLocaleString()}</span>
                             <span class="id">No.${report.postId || 'N/A'}</span>
+                            <span class="ip" style="color: #666; font-family: monospace; cursor: pointer; text-decoration: underline;" onclick="copyIP('${report.userIP}')" title="Clic para copiar IP del autor">IP: ${report.userIP || 'No disponible'}</span>
                             [<a href="${contentUrl}">Ver contenido</a>]
                             <button class="delete-btn" onclick="dismissReport('${doc.id}')">[Descartar]</button>
                             <button class="delete-btn" onclick="deleteReportedContent('${report.contentId}', '${report.contentType}', '${doc.id}')">[Eliminar Contenido]</button>
                         </div>
                         <div class="comment">
                             <p><strong>Razón del reporte:</strong> ${report.reason}</p>
+                            <p><strong>IP del que reporta:</strong> <span style="font-family: monospace; color: #666; cursor: pointer; text-decoration: underline;" onclick="copyIP('${report.reporterIP}')" title="Clic para copiar IP">${report.reporterIP || 'No disponible'}</span></p>
                             <p><strong>Contenido reportado:</strong></p>
                             <div>${processText(report.comment)}</div>
                         </div>
@@ -462,7 +551,6 @@ window.loadReports = async () => {
         
         container.innerHTML = reportsHTML || 'No hay reportes pendientes';
     } catch (error) {
-        console.error('Error detallado:', error);
         container.innerHTML = 'Error: ' + error.message;
     }
 };
@@ -521,6 +609,273 @@ window.clearAllReports = async () => {
     }
 };
 
+// Función para cargar la lista de bans
+window.loadBanList = async () => {
+    const container = document.getElementById('banManagement');
+    if (!container) {
+        return;
+    }
+    
+    // Mostrar estado de carga
+    container.innerHTML = '<div style="text-align: center; padding: 20px;">Cargando sistema de baneos...</div>';
+    
+    try {
+        // Importar el sistema de baneos directamente
+        const { ipBanSystem } = await import('./ip-ban-system.js');
+        
+        // Crear interfaz directamente aquí
+        await createBanInterface(container, ipBanSystem);
+        
+    } catch (error) {
+        container.innerHTML = `
+            <div style="color: red; padding: 20px; text-align: center;">
+                <h3>Error al cargar sistema de baneos</h3>
+                <p><strong>Detalles:</strong> ${error.message}</p>
+                <button onclick="loadBanList()" style="padding: 8px 16px; margin-top: 10px;">Reintentar</button>
+            </div>
+        `;
+    }
+};
+
+// Función para crear la interfaz de baneos directamente
+async function createBanInterface(container, ipBanSystem) {
+    // HTML de la interfaz
+    container.innerHTML = `
+    <div class="ban-panel">
+        <h2>Banear Nueva IP</h2>
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 100px; font-weight: bold;">IP:</td>
+                    <td><input type="text" id="banIP" placeholder="192.168.1.1" style="width: 100%; padding: 5px; margin-bottom: 5px;"></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Razón:</td>
+                    <td>
+                        <select id="banReason" style="width: 100%; padding: 5px; margin-bottom: 5px;">
+                            <option value="Spam">Spam</option>
+                            <option value="Contenido inapropiado">Contenido inapropiado</option>
+                            <option value="Trolling">Trolling</option>
+                            <option value="Flood">Flood</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold;">Duración:</td>
+                    <td>
+                        <select id="banDuration" style="width: 100%; padding: 5px; margin-bottom: 5px;">
+                            <option value="3600000">1 hora</option>
+                            <option value="86400000">1 día</option>
+                            <option value="604800000">1 semana</option>
+                            <option value="2592000000">1 mes</option>
+                            <option value="0">Permanente</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td><button onclick="executeBan()" style="padding: 5px 10px; background: #d32f2f; color: white; border: none; cursor: pointer;">Banear IP</button></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="ban-list">
+            <h2>IPs Baneadas</h2>
+            <div>
+                <span id="banCount" style="margin-left: 15px; color: #666;">Cargando...</span>
+            </div>
+            <div id="bansList" style="border: 1px solid #ddd; border-radius: 5px; padding: 10px; min-height: 100px;">
+                Cargando lista de baneos...
+            </div>
+        </div>
+    `;
+    
+    // Cargar lista inicial
+    await refreshBanList();
+}
+
+// Función para actualizar la lista de baneos
+window.refreshBanList = async () => {
+    const bansList = document.getElementById('bansList');
+    const banCount = document.getElementById('banCount');
+    
+    if (!bansList || !banCount) {
+        return;
+    }
+    
+    try {
+        // Importar el sistema de baneos
+        const { ipBanSystem } = await import('./ip-ban-system.js');
+        
+        bansList.innerHTML = 'Cargando...';
+        banCount.textContent = 'Cargando...';
+        
+        // Obtener lista de baneos activos
+        const activeBans = await ipBanSystem.getActiveBans();
+        
+        banCount.textContent = activeBans.length + ' bans activos';
+        
+        if (activeBans.length === 0) {
+            bansList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">No hay IPs baneadas</div>';
+            return;
+        }
+        
+        // Generar HTML para cada ban
+        let bansHTML = '';
+        activeBans.forEach((ban, index) => {
+            
+            const expiry = ban.expiresAt ? 
+                'Expira: ' + new Date(ban.expiresAt).toLocaleString() : 
+                'Permanente';
+                
+            const bannedDate = ban.bannedAt ? 
+                new Date(ban.bannedAt).toLocaleDateString() : 
+                'Fecha desconocida';
+            
+            const bgColor = index % 2 === 0 ? 'background: #e6e7ef;' : '';
+            const adminInfo = ban.adminName ? ' | Por: ' + ban.adminName : '';
+            
+            bansHTML += '<div style="border: 1px solid var(--border); padding: 10px; ' + bgColor + '">' +
+                '<div style="display: flex; justify-content: space-between; align-items: center;">' +
+                '<div>' +
+                '<strong style="font-family: monospace; color: #d32f2f;">' + ban.ip + '</strong>' +
+                '<span style="background: #ffbfbf; padding: 2px 6px; font-size: 12px; margin-left: 10px;">' + ban.reason + '</span>' +
+                '</div>' +
+                '<button onclick="removeBan(\'' + ban.id + '\')" style="padding: 5px 10px; background: #d32f2f; color: white; border: none; cursor: pointer;">Eliminar</button>' +
+                '</div>' +
+                '<div style="font-size: 12px; color: #666;">' +
+                'Baneado: ' + bannedDate + ' | ' + expiry + adminInfo +
+                '</div>' +
+                '</div>';
+        });
+        
+        bansList.innerHTML = bansHTML;
+        
+    } catch (error) {
+        bansList.innerHTML = '<div style="color: red; text-align: center; padding: 20px;">' +
+            '<strong>Error:</strong> ' + error.message + '<br>' +
+            '<small>Revisa la consola para más detalles</small>' +
+            '</div>';
+        banCount.textContent = 'Error';
+    }
+};
+
+// Función para ejecutar un baneo
+window.executeBan = async () => {
+    const ip = document.getElementById('banIP').value.trim();
+    const reason = document.getElementById('banReason').value;
+    const duration = parseInt(document.getElementById('banDuration').value);
+    
+    if (!ip) {
+        alert('Por favor ingresa una IP válida');
+        return;
+    }
+    
+    if (!reason) {
+        alert('Por favor selecciona una razón');
+        return;
+    }
+    
+    if (!confirm('¿Banear la IP ' + ip + '?')) {
+        return;
+    }
+    
+    try {
+        const { ipBanSystem } = await import('./ip-ban-system.js');
+        
+        // Obtener el nombre del admin actual
+        const { user } = firebaseAuth.getCurrentUser();
+        const adminName = user ? user.email : 'Admin';
+        
+        // El tercer parámetro debe ser duration en milisegundos (null para permanente)
+        const banDuration = duration > 0 ? duration : null;
+        
+        // Limpiar formulario
+        document.getElementById('banIP').value = '';
+        
+        // Actualizar lista
+        await refreshBanList();
+        
+        alert('IP ' + ip + ' baneada exitosamente');
+        
+    } catch (error) {
+        alert('Error al banear IP: ' + error.message);
+    }
+};
+
+// Función para remover un ban
+window.removeBan = async (banId) => {
+    if (!confirm('¿Eliminar este ban?')) {
+        return;
+    }
+    
+    try {
+        const { ipBanSystem } = await import('./ip-ban-system.js');
+        
+        await ipBanSystem.removeBan(banId);
+        
+        // Actualizar lista
+        await refreshBanList();
+        
+        alert('Ban eliminado exitosamente');
+        
+    } catch (error) {
+        alert('Error al eliminar ban: ' + error.message);
+    }
+};
+
+// Función para copiar IP al portapapeles
+window.copyIP = async (ip) => {
+    if (!ip || ip === 'No disponible') {
+        alert('IP no disponible para copiar');
+        return;
+    }
+    
+    try {
+        await navigator.clipboard.writeText(ip);
+        
+        // Mostrar notificación temporal
+        showCopyNotification(ip);
+    } catch (error) {
+        // Fallback para navegadores que no soportan clipboard API
+        const textArea = document.createElement('textarea');
+        textArea.value = ip;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        showCopyNotification(ip);
+    }
+};
+
+// Función para mostrar notificación de copia
+function showCopyNotification(ip) {
+    // Crear elemento de notificación
+    const notification = document.createElement('div');
+    notification.innerHTML = `IP ${ip} copiada al portapapeles`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: rgb(76, 175, 80);
+        color: white;
+        padding: 5px 10px;
+        z-index: 9999;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remover después de 2 segundos
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 2000);
+}
+
 // Funciones para el lightbox de imágenes
 window.openLightbox = (src) => {
     document.getElementById('lightbox').style.display = 'flex';
@@ -529,4 +884,36 @@ window.openLightbox = (src) => {
 
 window.closeLightbox = () => {
     document.getElementById('lightbox').style.display = 'none';
+};
+
+// Función para crear cuenta inicial de administrador
+window.createInitialAdmin = async () => {
+    const email = document.getElementById('adminUser').value.trim();
+    const password = document.getElementById('adminPass').value;
+    
+    if (!email || !password) {
+        showAuthNotification('Por favor completa email y contraseña', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showAuthNotification('La contraseña debe tener al menos 6 caracteres', 'error');
+        return;
+    }
+    
+    try {
+        showAuthNotification('Creando cuenta de administrador...', 'info');
+        
+        const result = await firebaseAuth.createAdminAccount(email, password);
+        
+        if (result.success) {
+            showAuthNotification('¡Cuenta creada exitosamente! Ya puedes iniciar sesión.', 'success');
+            // Limpiar el campo de contraseña por seguridad
+            document.getElementById('adminPass').value = '';
+        } else {
+            showAuthNotification(result.message, 'error');
+        }
+    } catch (error) {
+        showAuthNotification('Error al crear cuenta: ' + error.message, 'error');
+    }
 };

@@ -11,6 +11,7 @@
     <div class="header">
         <h1>Panel de Administración</h1>
         <div class="subtitle">Gestiona el contenido del sitio</div>
+        <div id="adminInfo" class="admin-info"></div>
     </div>
 
     <div class="nav">
@@ -22,49 +23,63 @@
     <div class="container">
         <div id="loginPanel" class="login-panel">
             <h2>Acceso Administrativo</h2>
-            <input type="text" id="adminUser" placeholder="Usuario" value="admin@firechan.org">
+            <input type="email" id="adminUser" placeholder="Email del administrador" value="admin@firechan.org">
             <input type="password" id="adminPass" placeholder="Contraseña" value="admin123" onkeypress="handleEnterKey(event)">
             <button onclick="login()">Iniciar Sesión</button>
+            
+            <div class="admin-setup" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                    <strong>Primera configuración:</strong><br>
+                    Si es tu primera vez, crea una cuenta de administrador:
+                </p>
+                <button onclick="createInitialAdmin()" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 3px; cursor: pointer;">
+                    Crear Cuenta Admin
+                </button>
+            </div>
         </div>
 
         <div id="adminContent" class="admin-content">
-            <div class="stats-panel">
-                <h2>Estadísticas Generales</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalThreads">0</div>
-                        <div class="stat-label">Total Threads</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalReplies">0</div>
-                        <div class="stat-label">Total Respuestas</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalToday">0</div>
-                        <div class="stat-label">Posts Hoy</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalReports">0</div>
-                        <div class="stat-label">Reportes Pendientes</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalFiles">0</div>
-                        <div class="stat-label">Total Archivos</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalFileSize">0 MB</div>
-                        <div class="stat-label">Tamaño Total</div>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('statistics')">Estadísticas</div>
+                <div class="tab" onclick="switchTab('threads')">Threads</div>
+                <div class="tab" onclick="switchTab('replies')">Respuestas</div>
+                <div class="tab" onclick="switchTab('reports')">Reportes</div>
+                <div class="tab" onclick="switchTab('bans')">Baneos</div>
+            </div>
+
+            <div id="statisticsTab" class="tab-content active">
+                <div class="stats-panel">
+                    <h2>Estadísticas Generales</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalThreads">0</div>
+                            <div class="stat-label">Total Threads</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalReplies">0</div>
+                            <div class="stat-label">Total Respuestas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalToday">0</div>
+                            <div class="stat-label">Posts Hoy</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalReports">0</div>
+                            <div class="stat-label">Reportes Pendientes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalFiles">0</div>
+                            <div class="stat-label">Total Archivos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="totalFileSize">0 MB</div>
+                            <div class="stat-label">Tamaño Total</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="tabs">
-                <div class="tab active" onclick="switchTab('threads')">Threads</div>
-                <div class="tab" onclick="switchTab('replies')">Respuestas</div>
-                <div class="tab" onclick="switchTab('reports')">Reportes</div>
-            </div>
-
-            <div id="threadsTab" class="tab-content active">
+            <div id="threadsTab" class="tab-content">
                 <div class="board-selector">
                     <label>Filtrar por tablón:</label>
                     <select id="boardFilter">
@@ -104,6 +119,12 @@
 
                 <div id="reportsContainer" class="loading">
                     Cargando reportes...
+                </div>
+            </div>
+
+            <div id="bansTab" class="tab-content">
+                <div id="banManagement">
+                    Cargando baneos...
                 </div>
             </div>
         </div>

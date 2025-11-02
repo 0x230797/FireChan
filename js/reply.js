@@ -1,32 +1,17 @@
 import { db } from './firebase-config.js';
-import { collection, addDoc, getDoc, doc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+import { collection, addDoc, getDoc, doc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 import { uploadConfig, imgbbConfig } from './config.js';
 import { processText } from './text-processor.js';
+import { ipBanSystem } from './ip-ban-system.js';
+import { formatFileSize, getUserUniqueId, getNextPostId, getImageDimensions } from './utils.js';
+import { firebaseAuth } from './firebase-auth.js';
+import { validateCaptcha } from './captcha-system.js';
 
 const urlParams = new URLSearchParams(window.location.search);
 const currentBoard = urlParams.get('board');
 const threadId = urlParams.get('thread');
 
-// Función para obtener o generar ID único del usuario
-function getUserUniqueId() {
-    let userId = localStorage.getItem('userUniqueId');
-    if (!userId) {
-        userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        localStorage.setItem('userUniqueId', userId);
-        localStorage.setItem('userFirstVisit', new Date().toISOString());
-    }
-    localStorage.setItem('userLastVisit', new Date().toISOString());
-    return userId;
-}
 
-// Función para formatear el tamaño del archivo
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
 
 document.addEventListener('DOMContentLoaded', () => {
     loadThread();
@@ -34,17 +19,15 @@ document.addEventListener('DOMContentLoaded', () => {
     loadQuoteFromURL();
     checkAdminStatusForForm();
     
-    // Escuchar cambios en el localStorage para actualizar el formulario
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'adminAuthenticated') {
-            checkAdminStatusForForm();
-        }
+    // Escuchar cambios en el estado de autenticación
+    firebaseAuth.onAuthStateChange(() => {
+        checkAdminStatusForForm();
     });
 });
 
-// Función para verificar si es admin y modificar el formulario
+// Función para verificar si es admin y modificar el formulario usando Firebase Auth
 function checkAdminStatusForForm() {
-    const isAdmin = localStorage.getItem('adminAuthenticated') === 'true';
+    const isAdmin = firebaseAuth.requireAdminAuth();
     const nameField = document.getElementById('replyName');
     
     if (nameField) {
@@ -96,53 +79,6 @@ function loadQuoteFromURL() {
         const newURL = window.location.pathname + `?board=${currentBoard}&thread=${threadId}`;
         window.history.replaceState({}, document.title, newURL);
     }
-}
-
-// Función para generar el siguiente ID de post (igual que en thread.js)
-async function getNextPostId() {
-    try {
-        return await runTransaction(db, async (transaction) => {
-            const counterRef = doc(db, 'counters', 'postId');
-            const counterDoc = await transaction.get(counterRef);
-            
-            let newId;
-            if (counterDoc.exists()) {
-                newId = counterDoc.data().value + 1;
-            } else {
-                newId = 1; // Empezar desde 1
-            }
-            
-            transaction.set(counterRef, { value: newId }, { merge: true });
-            return newId;
-        });
-    } catch (error) {
-        console.error('Error al generar ID:', error);
-        // Fallback: usar timestamp
-        return Date.now();
-    }
-}
-
-// Función para obtener dimensiones de imagen
-function getImageDimensions(file) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        const url = URL.createObjectURL(file);
-        
-        img.onload = () => {
-            URL.revokeObjectURL(url);
-            resolve({
-                width: img.width,
-                height: img.height
-            });
-        };
-        
-        img.onerror = () => {
-            URL.revokeObjectURL(url);
-            reject(new Error('No se pudieron obtener las dimensiones de la imagen'));
-        };
-        
-        img.src = url;
-    });
 }
 
 // Función para subir imagen a ImgBB
@@ -318,14 +254,25 @@ async function loadReplies() {
         
         repliesContainer.innerHTML = repliesHTML || 'No hay respuestas aún';
     } catch (error) {
-        console.error('Error detallado:', error);
         repliesContainer.innerHTML = 'Error al cargar las respuestas: ' + error.message;
     }
 }
 
 window.submitReply = async () => {
-    // Verificar si el administrador está logueado
-    const isAdmin = localStorage.getItem('adminAuthenticated') === 'true';
+    // Verificar ban antes de proceder
+    const canPost = await ipBanSystem.checkBanBeforeAction('enviar una respuesta');
+    if (!canPost) {
+        return; // El sistema de ban ya maneja la UI
+    }
+    
+    // Validar CAPTCHA antes de proceder
+    const captchaValid = await validateCaptcha();
+    if (!captchaValid) {
+        return; // El sistema CAPTCHA ya maneja los errores
+    }
+    
+    // Verificar si el administrador está logueado usando Firebase Auth
+    const isAdmin = firebaseAuth.requireAdminAuth();
     let name = document.getElementById('replyName').value;
     
     // Si no se especifica nombre, usar 'Administrador' si es admin, o 'Anónimo' si no
@@ -390,6 +337,9 @@ window.submitReply = async () => {
         // Usar el ID real del documento
         const actualId = window.actualThreadId || threadId;
         
+        // Obtener IP del usuario
+        const userIP = await ipBanSystem.getUserIP();
+        
         await addDoc(collection(db, 'replies'), {
             threadId: actualId,
             name,
@@ -405,7 +355,8 @@ window.submitReply = async () => {
             timestamp: serverTimestamp(),
             isAdmin: isAdmin,  // Marcar si es post de admin
             userId: getUserUniqueId(),  // Agregar ID único del usuario
-            board: currentBoard  // Agregar board para estadísticas
+            board: currentBoard,  // Agregar board para estadísticas
+            userIP: userIP  // Registrar IP del usuario
         });
 
         // Incrementar el contador de respuestas en el thread
@@ -472,6 +423,9 @@ window.reportPost = (contentId, contentType, postId, name, comment, imageUrl, bo
 
 async function submitReport(contentId, contentType, postId, name, comment, imageUrl, board, reason) {
     try {
+        // Obtener IP del usuario que reporta
+        const reporterIP = await ipBanSystem.getUserIP();
+
         await addDoc(collection(db, 'reports'), {
             contentId,
             contentType,
@@ -481,12 +435,12 @@ async function submitReport(contentId, contentType, postId, name, comment, image
             imageUrl,
             board,
             reason,
-            timestamp: serverTimestamp()
+            timestamp: serverTimestamp(),
+            reporterIP: reporterIP  // Registrar IP del que reporta
         });
         
         alert('Reporte enviado exitosamente. Los administradores lo revisarán.');
     } catch (error) {
-        console.error('Error al enviar reporte:', error);
         alert('Error al enviar el reporte: ' + error.message);
     }
 }
@@ -571,7 +525,6 @@ async function fetchPostPreview(postId) {
         
         return null;
     } catch (error) {
-        console.error('Error al obtener preview del post:', error);
         return null;
     }
 }

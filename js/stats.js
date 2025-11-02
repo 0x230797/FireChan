@@ -1,29 +1,6 @@
 import { db } from './firebase-config.js';
 import { collection, getDocs, query } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-
-// Función para formatear el tamaño del archivo
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-// Función para generar o recuperar ID único del usuario
-function getUserUniqueId() {
-    let userId = localStorage.getItem('userUniqueId');
-    if (!userId) {
-        // Generar ID único basado en timestamp y random
-        userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        localStorage.setItem('userUniqueId', userId);
-        localStorage.setItem('userFirstVisit', new Date().toISOString());
-    }
-    
-    // Actualizar última visita
-    localStorage.setItem('userLastVisit', new Date().toISOString());
-    return userId;
-}
+import { formatFileSize, getUserUniqueId } from './utils.js';
 
 // Función para obtener estadísticas completas del imageboard
 export async function getImageboardStats() {
@@ -38,7 +15,6 @@ export async function getImageboardStats() {
         };
 
         // Obtener todos los threads
-        console.log('Obteniendo estadísticas de threads...');
         const threadsSnapshot = await getDocs(collection(db, 'threads'));
         stats.totalThreads = threadsSnapshot.size;
         
@@ -78,7 +54,6 @@ export async function getImageboardStats() {
         });
 
         // Obtener todas las respuestas
-        console.log('Obteniendo estadísticas de respuestas...');
         const repliesSnapshot = await getDocs(collection(db, 'replies'));
         stats.totalReplies = repliesSnapshot.size;
         
@@ -127,11 +102,9 @@ export async function getImageboardStats() {
             stats.uniqueUsers++;
         }
 
-        console.log('Estadísticas obtenidas:', stats);
         return stats;
 
     } catch (error) {
-        console.error('Error al obtener estadísticas:', error);
         return {
             totalThreads: 0,
             totalReplies: 0,
@@ -189,7 +162,6 @@ export async function displayStats() {
         `;
 
     } catch (error) {
-        console.error('Error al mostrar estadísticas:', error);
         statsContainer.innerHTML = `
             <div class="stats-error">
                 <span>Error al cargar estadísticas</span>
@@ -213,7 +185,6 @@ export async function getQuickStats() {
             totalReplies: repliesSnapshot.size
         };
     } catch (error) {
-        console.error('Error al obtener estadísticas rápidas:', error);
         return {
             totalPosts: 0,
             totalThreads: 0,
