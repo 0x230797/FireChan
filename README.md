@@ -2,6 +2,8 @@
 
 FireChan es un imageboard estilo 4chan/2chan desarrollado con tecnologías web modernas. Permite a los usuarios crear tablones temáticos, publicar, responder con imágenes y texto, todo almacenado en Firebase.
 
+![FireChan Screenshot](screenshot.png)
+
 ## Características
 
 ### Funcionalidades Core
