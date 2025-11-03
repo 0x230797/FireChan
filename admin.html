@@ -17,6 +17,7 @@
 
     <div class="nav">
         <a href="index.html">Inicio</a>
+        <a href="news.html">Noticias</a>
         <a href="rules.html">Reglas</a>
         <a href="#" onclick="logout()">Cerrar Sesión</a>
     </div>
@@ -42,6 +43,7 @@
         <div id="adminContent" class="admin-content">
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('statistics')">Estadísticas</div>
+                <div class="tab" onclick="switchTab('news')">Noticias</div>
                 <div class="tab" onclick="switchTab('threads')">Threads</div>
                 <div class="tab" onclick="switchTab('replies')">Respuestas</div>
                 <div class="tab" onclick="switchTab('reports')">Reportes</div>
@@ -75,6 +77,51 @@
                         <div class="stat-card">
                             <div class="stat-number" id="totalFileSize">0 MB</div>
                             <div class="stat-label">Tamaño Total</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="newsTab" class="tab-content">
+                <div class="news-management">
+                    <h2>Gestión de Noticias</h2>
+                    
+                    <div class="news-form">
+                        <h3>Crear Nueva Noticia</h3>
+                        <div class="form-group">
+                            <label for="newsTitle">Título de la Noticia:</label>
+                            <input type="text" id="newsTitle" placeholder="Introduce el título de la noticia">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="newsPreview">Vista Previa (resumen corto):</label>
+                            <textarea id="newsPreview" rows="2" placeholder="Breve descripción que aparecerá en la página principal"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="newsContent">Contenido Completo:</label>
+                            <textarea id="newsContent" rows="6" placeholder="Contenido completo de la noticia"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="newsDate">Fecha de Publicación:</label>
+                            <input type="date" id="newsDate">
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button onclick="createNews()" class="btn-primary">Crear Noticia</button>
+                            <button onclick="clearNewsForm()" class="btn-secondary">Limpiar Formulario</button>
+                        </div>
+                    </div>
+
+                    <div class="news-list">
+                        <h3>Noticias Existentes</h3>
+                        <div class="news-controls">
+                            <button onclick="loadNewsList()">Actualizar Lista</button>
+                        </div>
+                        
+                        <div id="newsListContainer" class="news-list-container">
+                            <div class="loading">Cargando noticias...</div>
                         </div>
                     </div>
                 </div>

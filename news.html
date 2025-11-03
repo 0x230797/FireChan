@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noticias - FireChan</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+</head>
+<body>
+    <div class="header">
+        <h1>Noticias</h1>
+        <div class="subtitle">Noticias y Anuncios</div>
+    </div>
+
+    <div class="nav">
+        <a href="index.html">Inicio</a>
+        <a href="news.html">Noticias</a>
+        <a href="rules.html">Reglas</a>
+        <a href="admin.html">Admin</a>
+    </div>
+
+    <div class="container">
+
+        <!-- Contenedor de noticias -->
+        <div class="news-section">
+            <div id="all-news">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span>Cargando noticias...</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <p>Todo el contenido publicado es ficticio y se proporciona únicamente con fines de entretenimiento.</p>
+    </div>
+
+    <script type="module">
+        import './js/ban-integration.js';
+        import { db } from './js/firebase-config.js';
+        import { collection, query, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+        
+        // Cargar todas las noticias al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAllNews();
+            
+            // Verificar si hay una noticia específica en la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const newsId = urlParams.get('id');
+            if (newsId) {
+                setTimeout(() => scrollToNews(newsId), 1000);
+            }
+        });
+
+        async function loadAllNews() {
+            const newsContainer = document.getElementById('all-news');
+            
+            try {
+                // Obtener todas las noticias de Firebase
+                const q = query(
+                    collection(db, 'news'), 
+                    orderBy('createdAt', 'desc')
+                );
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    // Mostrar noticias por defecto si no hay ninguna
+                    showDefaultNewsPage(newsContainer);
+                    return;
+                }
+
+                // Mostrar todas las noticias ordenadas por fecha
+                let html = `<table class="news-table">
+                        <tbody>`;
+
+                querySnapshot.forEach((doc) => {
+                    const item = doc.data();
+                    const newsId = doc.id;
+                    
+                    html += `
+                        <tr id="${newsId}">
+                            <th>
+                                <h2>${item.title}</h2>
+                                <time>${formatDate(item.date)}</time>
+                            </th>
+                        </tr>
+                        <tr>
+                            <td>
+                                ${formatNewsContent(item.content)}
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `</tbody>
+                    </table>`;
+                newsContainer.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error al cargar noticias:', error);
+                showDefaultNewsPage(newsContainer);
+            }
+        }
+
+        function showDefaultNewsPage(container) {
+            container.innerHTML = `
+                <table class="news-table">
+                    <tbody>
+                        <tr id="news-1">
+                            <th>
+                                <h2>¡Bienvenidos a FireChan!</h2>
+                                <time>02/11/2025</time>
+                            </th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <p>Estamos emocionados de dar la bienvenida a todos los usuarios a nuestra nueva plataforma de discusión. FireChan es un espacio dedicado a la libre expresión y el intercambio de ideas.</p>
+                                <p>Nuestro objetivo es crear una comunidad vibrante donde los usuarios puedan discutir una amplia variedad de temas en un ambiente respetuoso y constructivo.</p>
+                                <p>Explora nuestros diferentes tablones y únete a las conversaciones que más te interesen. ¡Esperamos verte participar activamente!</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function scrollToNews(newsId) {
+            const element = document.getElementById(newsId);
+            if (element) {
+                element.scrollIntoView({ block: 'start' });
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric'
+            });
+        }
+
+        function formatNewsContent(content) {
+            return content.split('\n').map(paragraph => {
+                if (paragraph.trim()) {
+                    return `<p>${paragraph.trim()}</p>`;
+                }
+                return '';
+            }).join('');
+        }
+    </script>
+</body>
+</html>

@@ -8,11 +8,11 @@
     --text-green: #117743;
     --text-red: #771111;
     --text-gray: #666;
-    --text-light-gray: #89a;
+    --text-light-gray: #707d8a;
     --bg-disclaimer: #ffe6e6;
 }
 
-/* ========== RESET Y ESTILOS GENERALES ========== */
+/* ========== VINCULOS ========== */
 a, a:visited {
     color: var(--hyperlink);
     text-decoration: none;
@@ -35,7 +35,6 @@ a:active, a:hover {
 .header h1 {
     color: var(--title);
     font-size: 20pt;
-    font-weight: bold;
 }
 
 .header .subtitle {
@@ -49,7 +48,6 @@ a:active, a:hover {
 
 .nav a {
     margin: 0 10px;
-    font-weight: bold;
 }
 
 .nav a:hover {
@@ -59,79 +57,141 @@ a:active, a:hover {
 /* ========== CONTENEDOR PRINCIPAL ========== */
 .container {
     max-width: 1000px;
-    margin: 20px auto;
-    padding: 0 5px;
+    margin: 15px auto;
 }
 
 /* ========== SECCIONES ========== */
-.intro,
+.welcome-section,
+.news-section,
+.updates-section,
+.boards-section,
 .stats-panel,
 .stats-section,
+.rules-section,
 .ban-panel,
 .ban-list {
     background-color: var(--bg);
     border: 1px solid var(--border);
-    padding: 15px;
     margin-bottom: 20px;
 }
 
-.intro {
+.welcome-section header,
+.news-section header,
+.updates-section header,
+.boards-section header,
+.stats-section header,
+.stats-panel header,
+.rules-section header,
+.ban-panel header,
+.ban-list header {
+    background-color: #cbcfe7;
+    border-bottom: 1px solid var(--border);
+}
+
+.welcome-section header h2,
+.news-section header h2,
+.updates-section header h2,
+.boards-section header h2,
+.stats-section header h2,
+.stats-panel header h2,
+.rules-section header h2,
+.ban-panel header h2,
+.ban-list header h2 {
+    color: var(--title);
+    font-size: 14pt;
+    font-weight: bold;
     text-align: center;
 }
 
-.intro a {
+/* ========== TABLAS ========== */
+.news-table,
+.updates-table,
+.boards-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.news-table th,
+.updates-table th,
+.boards-table th,
+.news-table td,
+.updates-table td,
+.boards-table td {
+    padding: 8px;
+    text-align: left;
+}
+.news-table th,
+.updates-table th,
+.boards-table th {
+    background-color: #c4cae7;
+    color: var(--title);
+}
+.news-table tr:nth-child(even),
+.updates-table tr:nth-child(even),
+.boards-table tr:nth-child(even) {
+    background-color: #e2e6f3;
+}
+
+.news-table th h2 {
+    float: left;
+}
+
+.news-table th time {
+    float: right;
+    color: var(--text-light-gray);
+    font-size: 14pt;
+}
+
+/* ========== AJUSTES ========== */
+
+.welcome-section {
+    text-align: center;
+}
+
+.welcome-section span {
+    display: block;
+    margin: 10px;
+}
+
+.welcome-section a {
     color: var(--hyperlink);
 }
 
-/* ========== TABLONES (INDEX) ========== */
-.boards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 20px;
+.welcome-section a:hover {
+    color: var(--hyperlink-hover);
 }
 
-.board-card {
-    background-color: var(--bg);
-    border: 1px solid var(--border);
+.updates-table td:nth-child(1) {
+    width: 5%;
+}
+.updates-table td:nth-child(2) {
+    width: 75%;
+}
+.updates-table td:nth-child(3) {
+    width: 15%;
+}
+.updates-table td:nth-child(4) {
+    width: 5%;
+}
+
+.rules-section {
     padding: 15px;
 }
 
-.board-card:hover {
-    background-color: #c5cfe0;
+.disclaimer {
+    background-color: var(--bg-disclaimer);
+    border: 1px solid #d9b7b7;
 }
 
-.board-title {
-    color: #0f0c5d;
-    font-size: 20pt;
-    font-weight: bold;
-    margin-bottom: 10px;
+.disclaimer p {
+    margin-bottom: 5px;
 }
 
-.board-name {
-    color: var(--title);
-    font-size: 15pt;
-    margin-bottom: 10px;
-}
-
-.board-desc {
-    color: var(--text-gray);
-    font-size: 12pt;
-    line-height: 1.4;
+.disclaimer p:last-child {
+    margin-bottom: 0;
+    color: #707070;
 }
 
 /* ========== SECCIÓN DE ESTADÍSTICAS ========== */
-.intro h2,
-.stats-section h2,
-.stats-panel h2,
-.ban-panel h2,
-.ban-list h2 {
-    color: var(--title);
-    font-size: 18pt;
-    font-weight: bold;
-    text-align: center;
-}
-
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -148,8 +208,8 @@ a:active, a:hover {
     letter-spacing: 0.5px;
 }
 
-/* Estilos para el loading */
-.stats-loading {
+/* ========== LOADING ========== */
+.loading {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -607,13 +667,6 @@ a:active, a:hover {
     margin-bottom: 10px;
 }
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-top: 10px;
-}
-
 .stat-card {
     background-color: #fff;
     padding: 15px;
@@ -750,12 +803,6 @@ a:active, a:hover {
     font-size: 18pt;
     margin-bottom: 20px;
     text-align: center;
-    border-bottom: 2px solid var(--bg);
-    padding-bottom: 10px;
-}
-
-.rules-section {
-    padding: 15px 0;
 }
 
 .rules-section h3 {
@@ -778,7 +825,7 @@ a:active, a:hover {
 
 .board-rules h4 {
     color: var(--title);
-    font-size: 12pt;
+    font-size: 11pt;
     margin-bottom: 5px;
 }
 
@@ -790,27 +837,6 @@ a:active, a:hover {
 .board-rules ul li {
     margin-bottom: 5px;
     line-height: 1.3;
-}
-
-.disclaimer {
-    background-color: var(--bg-disclaimer);
-    padding: 15px;
-}
-
-.disclaimer h3 {
-    color: var(--title);
-    font-size: 12pt;
-    margin-bottom: 10px;
-}
-
-.disclaimer p {
-    line-height: 1.4;
-    margin-bottom: 8px;
-}
-
-.disclaimer p:last-child {
-    margin-bottom: 0;
-    color: #707070;
 }
 
 /* ========== VARIAS ========== */
@@ -911,7 +937,7 @@ a:active, a:hover {
     }
 
     .rules-content h2 {
-        font-size: 16pt;
+        font-size: 14pt;
     }
 
     .rules-section h3 {
@@ -919,7 +945,7 @@ a:active, a:hover {
     }
 
     .board-rules h4 {
-        font-size: 11pt;
+        font-size: 10pt;
     }
 }
 

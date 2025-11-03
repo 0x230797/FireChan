@@ -1,8 +1,49 @@
 import { db } from './firebase-config.js';
-import { collection, query, where, orderBy, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+import { 
+    collection, 
+    query, 
+    where, 
+    orderBy, 
+    getDocs, 
+    deleteDoc, 
+    doc, 
+    addDoc, 
+    updateDoc, 
+    getDoc,
+    Timestamp 
+} from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 import { processText } from './text-processor.js';
 import { formatFileSize } from './utils.js';
-import { firebaseAuth, showAuthNotification } from './firebase-auth.js';
+import { firebaseAuth } from './firebase-auth.js';
+
+// Función simple de notificación para evitar errores
+function showSimpleNotification(message, type = 'info') {
+    console.log(`${type.toUpperCase()}: ${message}`);
+    
+    // Crear notificación simple
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px;
+        background: ${type === 'error' ? '#ff4444' : type === 'success' ? '#44ff44' : '#4444ff'};
+        color: white;
+        border-radius: 5px;
+        z-index: 9999;
+        max-width: 300px;
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Remover después de 3 segundos
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 3000);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeAuth();
@@ -427,6 +468,8 @@ window.switchTab = (tabName) => {
     // Cargar contenido según la pestaña
     if (tabName === 'statistics') {
         loadStats();
+    } else if (tabName === 'news') {
+        loadNewsList();
     } else if (tabName === 'threads') {
         loadThreads();
     } else if (tabName === 'replies') {
@@ -642,7 +685,9 @@ async function createBanInterface(container, ipBanSystem) {
     // HTML de la interfaz
     container.innerHTML = `
     <div class="ban-panel">
-        <h2>Banear Nueva IP</h2>
+        <header>
+            <h2>Banear Nueva IP</h2>
+        </header>
             <table style="width: 100%;">
                 <tr>
                     <td style="width: 100px; font-weight: bold;">IP:</td>
@@ -679,7 +724,9 @@ async function createBanInterface(container, ipBanSystem) {
         </div>
 
         <div class="ban-list">
-            <h2>IPs Baneadas</h2>
+            <header>
+                <h2>IPs Baneadas</h2>
+            </header>
             <div>
                 <span id="banCount" style="margin-left: 15px; color: #666;">Cargando...</span>
             </div>
@@ -917,3 +964,177 @@ window.createInitialAdmin = async () => {
         showAuthNotification('Error al crear cuenta: ' + error.message, 'error');
     }
 };
+
+// ========== FUNCIONES PARA MANEJO DE NOTICIAS ==========
+
+window.createNews = async function() {
+    const title = document.getElementById('newsTitle').value.trim();
+    const preview = document.getElementById('newsPreview').value.trim();
+    const content = document.getElementById('newsContent').value.trim();
+    const date = document.getElementById('newsDate').value;
+
+    if (!title || !preview || !content || !date) {
+        showSimpleNotification('Por favor, completa todos los campos', 'error');
+        return;
+    }
+
+    try {
+        const titleElement = document.getElementById('newsTitle');
+        const editingId = titleElement.getAttribute('data-editing');
+
+        const newsData = {
+            title: title,
+            preview: preview,
+            content: content,
+            date: date,
+            updatedAt: Timestamp.now(),
+            updatedBy: firebaseAuth.getCurrentUser().user?.email || 'admin'
+        };
+
+        if (editingId) {
+            // Actualizar noticia existente
+            const docRef = doc(db, 'news', editingId);
+            await updateDoc(docRef, newsData);
+            
+            showSimpleNotification('¡Noticia actualizada exitosamente!', 'success');
+            
+            // Limpiar indicador de edición
+            titleElement.removeAttribute('data-editing');
+        } else {
+            // Crear nueva noticia
+            newsData.createdAt = Timestamp.now();
+            newsData.createdBy = firebaseAuth.getCurrentUser().user?.email || 'admin';
+            
+            const docRef = await addDoc(collection(db, 'news'), newsData);
+            console.log('Noticia creada con ID: ', docRef.id);
+
+            showSimpleNotification('¡Noticia creada exitosamente!', 'success');
+        }
+
+        clearNewsForm();
+        loadNewsList();
+        
+    } catch (error) {
+        console.error('Error al procesar noticia:', error);
+        showSimpleNotification('Error al procesar la noticia: ' + error.message, 'error');
+    }
+};
+
+window.clearNewsForm = function() {
+    const titleElement = document.getElementById('newsTitle');
+    
+    titleElement.value = '';
+    document.getElementById('newsPreview').value = '';
+    document.getElementById('newsContent').value = '';
+    document.getElementById('newsDate').value = '';
+    
+    // Limpiar indicador de edición
+    titleElement.removeAttribute('data-editing');
+    
+    // Restaurar fecha actual
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('newsDate').value = today;
+};
+
+window.loadNewsList = async function() {
+    const container = document.getElementById('newsListContainer');
+    
+    try {
+        // Mostrar loading
+        container.innerHTML = '<p style="text-align: center; color: #666;">Cargando noticias...</p>';
+        
+        // Obtener noticias de Firebase ordenadas por fecha de creación
+        const q = query(
+            collection(db, 'news'), 
+            orderBy('createdAt', 'desc')
+        );
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            container.innerHTML = '<p style="text-align: center; color: #666;">No hay noticias creadas</p>';
+            return;
+        }
+
+        let html = '<div class="admin-news-list">';
+        
+        querySnapshot.forEach((doc) => {
+            const item = doc.data();
+            const newsId = doc.id;
+            
+            html += `
+                <div class="admin-news-item">
+                    <div class="news-item-header">
+                        <h4>${item.title}</h4>
+                        <span class="news-item-date">${item.date}</span>
+                    </div>
+                    <div class="news-item-preview">${item.preview}</div>
+                    <div class="news-item-actions">
+                        <button onclick="editNews('${newsId}')" class="btn-secondary">Editar</button>
+                        <button onclick="deleteNews('${newsId}')" class="btn-danger">Eliminar</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error al cargar noticias:', error);
+        container.innerHTML = '<p style="color: red;">Error al cargar las noticias: ' + error.message + '</p>';
+    }
+};
+
+window.editNews = async function(newsId) {
+    try {
+        // Obtener documento específico de Firebase
+        const docRef = doc(db, 'news', newsId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            const newsItem = docSnap.data();
+            
+            document.getElementById('newsTitle').value = newsItem.title;
+            document.getElementById('newsPreview').value = newsItem.preview;
+            document.getElementById('newsContent').value = newsItem.content;
+            document.getElementById('newsDate').value = newsItem.date;
+            
+            // Agregar indicador de edición
+            document.getElementById('newsTitle').setAttribute('data-editing', newsId);
+            
+            showSimpleNotification('Noticia cargada para edición', 'info');
+        } else {
+            showSimpleNotification('La noticia no existe', 'error');
+        }
+    } catch (error) {
+        console.error('Error al cargar noticia:', error);
+        showSimpleNotification('Error al cargar la noticia: ' + error.message, 'error');
+    }
+};
+
+window.deleteNews = async function(newsId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta noticia?')) {
+        return;
+    }
+
+    try {
+        // Eliminar documento de Firebase
+        await deleteDoc(doc(db, 'news', newsId));
+        
+        showSimpleNotification('Noticia eliminada exitosamente', 'success');
+        loadNewsList();
+        
+    } catch (error) {
+        console.error('Error al eliminar noticia:', error);
+        showSimpleNotification('Error al eliminar la noticia: ' + error.message, 'error');
+    }
+};
+
+// Inicializar la fecha actual en el formulario
+document.addEventListener('DOMContentLoaded', () => {
+    const dateInput = document.getElementById('newsDate');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+});

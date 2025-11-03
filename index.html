@@ -16,59 +16,68 @@
 
     <div class="nav">
         <a href="index.html">Inicio</a>
+        <a href="news.html">Noticias</a>
         <a href="rules.html">Reglas</a>
         <a href="admin.html">Admin</a>
     </div>
 
     <div class="container">
-        <div class="intro">
-            <h2>Tablones</h2>
-            <p>Explora nuestros tablones temáticos y únete a las conversaciones. Puedes ver hilos existentes o crear nuevos posts.</p>
-            <p>¿Tienes dudas, sugerencias o comentarios sobre FireChan? Compártelos en <a href="thread.html?board=me"><b>/me/ Meta</b></a> - tu feedback es importante para nosotros.</p>
+        <div class="welcome-section">
+            <header>
+                <h2>Bienvenido a FireChan</h2>
+            </header>
+            <span>
+                <p>Un imageboard dedicado a la libre expresión y discusión. Explora nuestros tablones temáticos y únete a las conversaciones.</p>
+                <p>¿Tienes dudas, sugerencias o comentarios? Compártelos en <a href="thread.html?board=me">/me/ Meta</a> - tu feedback es importante para nosotros.</p>
+            </span>
         </div>
 
-        <div class="boards-grid">
-            <a href="thread.html?board=a" class="board-card">
-                <div class="board-title">/a/</div>
-                <div class="board-name">Anime y Manga</div>
-                <div class="board-desc">Anime, manga y cultura japonesa</div>
-            </a>
-
-            <a href="thread.html?board=b" class="board-card">
-                <div class="board-title">/b/</div>
-                <div class="board-name">Aleatorio</div>
-                <div class="board-desc">Conversaciones aleatorias y contenido variado</div>
-            </a>
-
-            <a href="thread.html?board=g" class="board-card">
-                <div class="board-title">/g/</div>
-                <div class="board-name">Tecnología</div>
-                <div class="board-desc">Discusiones sobre tecnología, programación y gadgets</div>
-            </a>
-
-            <a href="thread.html?board=v" class="board-card">
-                <div class="board-title">/v/</div>
-                <div class="board-name">Videojuegos</div>
-                <div class="board-desc">Todo sobre videojuegos y gaming</div>
-            </a>
-
-            <a href="thread.html?board=pol" class="board-card">
-                <div class="board-title">/pol/</div>
-                <div class="board-name">Política</div>
-                <div class="board-desc">Política y actualidad</div>
-            </a>
-
-            <a href="thread.html?board=x" class="board-card">
-                <div class="board-title">/x/</div>
-                <div class="board-name">Paranormal</div>
-                <div class="board-desc">Temas paranormales y misterios</div>
-            </a>
+        <!-- Sección de Noticias -->
+        <div class="news-section">
+            <header>
+                <h2>Últimas Noticias</h2>
+            </header>
+            <div id="news-container">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span>Cargando noticias...</span>
+                </div>
+            </div>
         </div>
 
+        <!-- Sección de Actualizaciones -->
+        <div class="updates-section">
+            <header>
+                <h2>Actualizaciones Recientes</h2>
+            </header>
+            <div id="updates-container">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span>Cargando actualizaciones...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Tablones -->
+        <div class="boards-section">
+            <header>
+                <h2>Tablones</h2>
+            </header>
+            <div id="boards-container">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span>Cargando tablones...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Estadísticas -->
         <div class="stats-section">
-            <h2>Estadísticas del Sitio</h2>
+            <header>
+                <h2>Estadísticas del Sitio</h2>
+            </header>
             <div id="stats-container">
-                <div class="stats-loading">
+                <div class="loading">
                     <div class="loading-spinner"></div>
                     <span>Cargando estadísticas...</span>
                 </div>
@@ -83,14 +92,23 @@
 
     <script type="module">
         import { displayStats } from './js/stats.js';
+        import { loadNews, loadUpdates, loadBoardsList } from './js/news-manager.js';
         import './js/ban-integration.js'; // Sistema de baneo
         
-        // Cargar estadísticas al cargar la página
+        // Cargar contenido al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
             displayStats();
+            
+            // Cargar contenido con indicadores de carga
+            setTimeout(() => loadNews(), 500);
+            setTimeout(() => loadUpdates(), 1000);
+            setTimeout(() => loadBoardsList(), 1500);
         });
 
-        // Hacer displayStats global para el botón de reintentar
+        // Hacer funciones globales para el botón de reintentar
+        window.loadNews = loadNews;
+        window.loadUpdates = loadUpdates;
+        window.loadBoardsList = loadBoardsList;
         window.displayStats = displayStats;
     </script>
 </body>
