@@ -12,7 +12,6 @@
     <div class="header">
         <h1>Panel de Administración</h1>
         <div class="subtitle">Gestiona el contenido del sitio</div>
-        <div id="adminInfo" class="admin-info"></div>
     </div>
 
     <div class="nav">
@@ -44,7 +43,7 @@
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('statistics')">Estadísticas</div>
                 <div class="tab" onclick="switchTab('news')">Noticias</div>
-                <div class="tab" onclick="switchTab('threads')">Threads</div>
+                <div class="tab" onclick="switchTab('threads')">Hilos</div>
                 <div class="tab" onclick="switchTab('replies')">Respuestas</div>
                 <div class="tab" onclick="switchTab('reports')">Reportes</div>
                 <div class="tab" onclick="switchTab('bans')">Baneos</div>
@@ -52,76 +51,204 @@
 
             <div id="statisticsTab" class="tab-content active">
                 <div class="stats-panel">
-                    <h2>Estadísticas Generales</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-number" id="totalThreads">0</div>
-                            <div class="stat-label">Total Threads</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="totalReplies">0</div>
-                            <div class="stat-label">Total Respuestas</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="totalToday">0</div>
-                            <div class="stat-label">Posts Hoy</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="totalReports">0</div>
-                            <div class="stat-label">Reportes Pendientes</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="totalFiles">0</div>
-                            <div class="stat-label">Total Archivos</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="totalFileSize">0 MB</div>
-                            <div class="stat-label">Tamaño Total</div>
+                    <header>
+                        <h2>Estadísticas Generales</h2>
+                    </header>
+                    
+                    <!-- Estadísticas Principales -->
+                    <div class="stats-category">
+                        <h3>Contenido Principal</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalThreads">0</div>
+                                <div class="stat-label">Hilos</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalReplies">0</div>
+                                <div class="stat-label">Respuestas</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalPosts">0</div>
+                                <div class="stat-label">Posts Totales</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalUsers">0</div>
+                                <div class="stat-label">Usuarios Únicos</div>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Actividad por Tiempo -->
+                    <div class="stats-category">
+                        <h3>Actividad Temporal</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="postsToday">0</div>
+                                <div class="stat-label">Publicaciones Hoy</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="postsThisWeek">0</div>
+                                <div class="stat-label">Publicaciones Esta Semana</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="postsThisMonth">0</div>
+                                <div class="stat-label">Publicaciones Este Mes</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="avgPostsPerDay">0</div>
+                                <div class="stat-label">Promedio Publicaciones/Día</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Archivos y Multimedia -->
+                    <div class="stats-category">
+                        <h3>Archivos y Multimedia</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalFiles">0</div>
+                                <div class="stat-label">Total Archivos</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalFileSize">0 MB</div>
+                                <div class="stat-label">Tamaño Total</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="avgFileSize">0 KB</div>
+                                <div class="stat-label">Promedio Archivo</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="imagesCount">0</div>
+                                <div class="stat-label">Total Imágenes</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Moderación y Reportes -->
+                    <div class="stats-category">
+                        <h3>Moderación y Seguridad</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalReports">0</div>
+                                <div class="stat-label">Reportes Pendientes</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalBans">0</div>
+                                <div class="stat-label">Baneos Activos</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="deletedPosts">0</div>
+                                <div class="stat-label">Posts Eliminados</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="reportRate">0%</div>
+                                <div class="stat-label">Tasa de Reportes</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Análisis de Tablones -->
+                    <div class="stats-category">
+                        <h3>Análisis de Tablones</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="mostActiveBoard">-</div>
+                                <div class="stat-label">Tablón Más Activo</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalBoards">7</div>
+                                <div class="stat-label">Total Tablones</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="threadsWithReplies">0</div>
+                                <div class="stat-label">Threads con Respuestas</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="avgRepliesPerThread">0</div>
+                                <div class="stat-label">Promedio Respuestas/Thread</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rendimiento del Sistema -->
+                    <div class="stats-category">
+                        <h3>Rendimiento del Sistema</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="dbSize">0 MB</div>
+                                <div class="stat-label">Tamaño Base de Datos</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="lastActivity">-</div>
+                                <div class="stat-label">Última Actividad</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="peakActivity">0</div>
+                                <div class="stat-label">Pico de Actividad</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="uptime">-</div>
+                                <div class="stat-label">Tiempo Activo</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 </div>
             </div>
 
             <div id="newsTab" class="tab-content">
-                <div class="news-management">
-                    <h2>Gestión de Noticias</h2>
-                    
+                <div class="news-panel">
+                    <header>
+                        <h2>Gestión de Noticias</h2>
+                    </header>
                     <div class="news-form">
-                        <h3>Crear Nueva Noticia</h3>
-                        <div class="form-group">
-                            <label for="newsTitle">Título de la Noticia:</label>
-                            <input type="text" id="newsTitle" placeholder="Introduce el título de la noticia">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="newsPreview">Vista Previa (resumen corto):</label>
-                            <textarea id="newsPreview" rows="2" placeholder="Breve descripción que aparecerá en la página principal"></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="newsContent">Contenido Completo:</label>
-                            <textarea id="newsContent" rows="6" placeholder="Contenido completo de la noticia"></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="newsDate">Fecha de Publicación:</label>
-                            <input type="date" id="newsDate">
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button onclick="createNews()" class="btn-primary">Crear Noticia</button>
-                            <button onclick="clearNewsForm()" class="btn-secondary">Limpiar Formulario</button>
-                        </div>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td>Título de la Noticia:</td>
+                                    <td>
+                                        <input type="text" id="newsTitle" placeholder="Introduce el título de la noticia">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Vista Previa (resumen corto):</td>
+                                    <td>
+                                        <textarea id="newsPreview" rows="2" placeholder="Breve descripción que aparecerá en la página principal"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Contenido Completo:</td>
+                                    <td><textarea id="newsContent" rows="6" placeholder="Contenido completo de la noticia"></textarea></td>
+                                </tr>
+                                <tr>
+                                    <td>Fecha de Publicación:</td>
+                                    <td><input type="date" id="newsDate"></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <button onclick="createNews()">Crear Noticia</button>
+                                        <button onclick="clearNewsForm()">Limpiar Formulario</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <div class="news-list">
-                        <h3>Noticias Existentes</h3>
+                </div>
+                <div class="news-list">
+                    <header>
+                        <h2>Noticias Existentes</h2>
+                    </header>
+                    <div class="news-list-container">
                         <div class="news-controls">
                             <button onclick="loadNewsList()">Actualizar Lista</button>
                         </div>
-                        
-                        <div id="newsListContainer" class="news-list-container">
-                            <div class="loading">Cargando noticias...</div>
+                            
+                        <div id="newsListContainer">
+                            <div class="loading">
+                                <div class="loading-spinner"></div>
+                                <span>Cargando noticias...</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -144,9 +271,13 @@
                     <button onclick="loadThreads()">Actualizar</button>
                 </div>
 
-                <div id="threadsContainer" class="loading">
-                    Cargando threads...
+                <div id="threadsContainer">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <span>Cargando Hilos...</span>
+                    </div>
                 </div>
+
             </div>
 
             <div id="repliesTab" class="tab-content">
@@ -154,8 +285,11 @@
                     <button onclick="loadReplies()">Actualizar Respuestas</button>
                 </div>
 
-                <div id="repliesContainer" class="loading">
-                    Cargando respuestas...
+                <div id="repliesContainer">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <span>Cargando Respuestas...</span>
+                    </div>
                 </div>
             </div>
 
@@ -165,14 +299,20 @@
                     <button onclick="clearAllReports()">Limpiar Todos</button>
                 </div>
 
-                <div id="reportsContainer" class="loading">
-                    Cargando reportes...
+                <div id="reportsContainer">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <span>Cargando reportes...</span>
+                    </div>
                 </div>
             </div>
 
             <div id="bansTab" class="tab-content">
                 <div id="banManagement">
-                    Cargando baneos...
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <span>Cargando baneos...</span>
+                    </div>
                 </div>
             </div>
         </div>

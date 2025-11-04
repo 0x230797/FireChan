@@ -16,6 +16,7 @@
 
     <div class="nav">
         <a href="index.html">Inicio</a>
+        <a href="news.html">Noticias</a>
         <a href="rules.html">Reglas</a>
         <a href="admin.html">Admin</a>
     </div>
@@ -23,9 +24,19 @@
     <div class="container">
         <a class="back-link" id="backLink" href="#">← Volver al tablón</a>
 
-        <div id="threadContainer" class="loading">Cargando publicación...</div>
+        <div id="threadContainer">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <span>Cargando publicación...</span>
+            </div>
+        </div>
 
-        <div id="repliesContainer" class="loading">Cargando respuestas...</div>
+        <div id="repliesContainer">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <span>Cargando respuestas...</span>
+            </div>
+        </div>
 
         <div id="replyFormContainer" class="post-form">
             <h3>Responder a la publicación</h3>

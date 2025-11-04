@@ -45,6 +45,43 @@ function showSimpleNotification(message, type = 'info') {
     }, 3000);
 }
 
+// Función auxiliar para formatear tiempo relativo
+function formatTimeAgo(timestamp) {
+    let date;
+    
+    if (timestamp && typeof timestamp.toDate === 'function') {
+        date = timestamp.toDate();
+    } else if (timestamp instanceof Date) {
+        date = timestamp;
+    } else if (typeof timestamp === 'string') {
+        date = new Date(timestamp);
+    } else {
+        return 'hace un momento';
+    }
+    
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) {
+        return 'hace un momento';
+    } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `hace ${minutes} min`;
+    } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `hace ${hours} hora${hours > 1 ? 's' : ''}`;
+    } else if (diffInSeconds < 2592000) {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `hace ${days} día${days > 1 ? 's' : ''}`;
+    } else {
+        return date.toLocaleDateString('es-ES', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric' 
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeAuth();
 });
@@ -72,21 +109,8 @@ function showAdminPanel(user) {
     document.getElementById('loginPanel').style.display = 'none';
     document.getElementById('adminContent').style.display = 'block';
     
-    // Mostrar información del admin autenticado
-    updateAdminInfo(user);
-    
     loadStats();
     loadThreads();
-}
-
-function updateAdminInfo(user) {
-    // Agregar info del admin en el header si existe
-    const adminInfo = document.getElementById('adminInfo');
-    if (adminInfo) {
-        adminInfo.innerHTML = `
-            <span>Bienvenido, ${user.email}</span>
-        `;
-    }
 }
 
 function showLoginPanel() {
@@ -227,64 +251,201 @@ async function loadStats() {
         const threadsQuery = query(collection(db, 'threads'));
         const repliesQuery = query(collection(db, 'replies'));
         const reportsQuery = query(collection(db, 'reports'));
+        const bansQuery = query(collection(db, 'bans'));
         
-        const [threadsSnapshot, repliesSnapshot, reportsSnapshot] = await Promise.all([
+        const [threadsSnapshot, repliesSnapshot, reportsSnapshot, bansSnapshot] = await Promise.all([
             getDocs(threadsQuery),
             getDocs(repliesQuery),
-            getDocs(reportsQuery)
+            getDocs(reportsQuery),
+            getDocs(bansQuery)
         ]);
 
-        document.getElementById('totalThreads').textContent = threadsSnapshot.size;
-        document.getElementById('totalReplies').textContent = repliesSnapshot.size;
-        document.getElementById('totalReports').textContent = reportsSnapshot.size;
+        // Obtener fechas de referencia
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const thisWeekStart = new Date(today.getTime() - (today.getDay() * 24 * 60 * 60 * 1000));
+        const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        // Calcular estadísticas de archivos
+        // Variables para cálculos
         let totalFiles = 0;
         let totalFileSize = 0;
+        let imagesCount = 0;
+        let postsToday = 0;
+        let postsThisWeek = 0;
+        let postsThisMonth = 0;
+        let uniqueUsers = new Set();
+        let boardStats = {};
+        let threadsWithReplies = 0;
+        let totalRepliesCount = 0;
+        let deletedPosts = 0;
+        let lastActivity = null;
+        let oldestPost = null;
 
-        // Contar archivos en threads
+        // Procesar threads
         threadsSnapshot.forEach(doc => {
             const thread = doc.data();
-            if (thread.imageUrl) {
+            const timestamp = thread.timestamp?.toDate() || thread.createdAt?.toDate();
+            
+            if (timestamp) {
+                if (timestamp >= today) postsToday++;
+                if (timestamp >= thisWeekStart) postsThisWeek++;
+                if (timestamp >= thisMonthStart) postsThisMonth++;
+                
+                if (!lastActivity || timestamp > lastActivity) {
+                    lastActivity = timestamp;
+                }
+                if (!oldestPost || timestamp < oldestPost) {
+                    oldestPost = timestamp;
+                }
+            }
+
+            // Contar archivos e imágenes
+            if (thread.imageUrl || thread.fileName) {
                 totalFiles++;
+                if (thread.fileName && /\.(jpg|jpeg|png|gif|webp)$/i.test(thread.fileName)) {
+                    imagesCount++;
+                }
                 if (thread.fileSize) {
                     totalFileSize += thread.fileSize;
                 }
             }
+
+            // Estadísticas por tablón
+            const board = thread.board || 'unknown';
+            if (!boardStats[board]) {
+                boardStats[board] = { posts: 0, threads: 0 };
+            }
+            boardStats[board].threads++;
+            boardStats[board].posts++;
+
+            // Usuarios únicos
+            if (thread.userHash) {
+                uniqueUsers.add(thread.userHash);
+            }
+
+            // Contar si tiene respuestas
+            if (thread.replyCount && thread.replyCount > 0) {
+                threadsWithReplies++;
+                totalRepliesCount += thread.replyCount;
+            }
+
+            // Posts eliminados
+            if (thread.deleted) {
+                deletedPosts++;
+            }
         });
 
-        // Contar archivos en replies
+        // Procesar respuestas
         repliesSnapshot.forEach(doc => {
             const reply = doc.data();
-            if (reply.imageUrl) {
+            const timestamp = reply.timestamp?.toDate() || reply.createdAt?.toDate();
+            
+            if (timestamp) {
+                if (timestamp >= today) postsToday++;
+                if (timestamp >= thisWeekStart) postsThisWeek++;
+                if (timestamp >= thisMonthStart) postsThisMonth++;
+                
+                if (!lastActivity || timestamp > lastActivity) {
+                    lastActivity = timestamp;
+                }
+            }
+
+            // Contar archivos e imágenes
+            if (reply.imageUrl || reply.fileName) {
                 totalFiles++;
+                if (reply.fileName && /\.(jpg|jpeg|png|gif|webp)$/i.test(reply.fileName)) {
+                    imagesCount++;
+                }
                 if (reply.fileSize) {
                     totalFileSize += reply.fileSize;
                 }
             }
+
+            // Estadísticas por tablón
+            const board = reply.board || 'unknown';
+            if (!boardStats[board]) {
+                boardStats[board] = { posts: 0, threads: 0 };
+            }
+            boardStats[board].posts++;
+
+            // Usuarios únicos
+            if (reply.userHash) {
+                uniqueUsers.add(reply.userHash);
+            }
+
+            // Posts eliminados
+            if (reply.deleted) {
+                deletedPosts++;
+            }
         });
+
+        // Calcular estadísticas derivadas
+        const totalPosts = threadsSnapshot.size + repliesSnapshot.size;
+        const totalActiveReports = Array.from(reportsSnapshot.docs).filter(doc => !doc.data().resolved).length;
+        const totalActiveBans = Array.from(bansSnapshot.docs).filter(doc => {
+            const expiresAt = doc.data().expiresAt?.toDate();
+            return !expiresAt || expiresAt > now;
+        }).length;
+
+        // Tablón más activo
+        let mostActiveBoard = '-';
+        let maxPosts = 0;
+        Object.entries(boardStats).forEach(([board, stats]) => {
+            if (stats.posts > maxPosts) {
+                maxPosts = stats.posts;
+                mostActiveBoard = `/${board}/`;
+            }
+        });
+
+        // Promedio de respuestas por thread
+        const avgRepliesPerThread = threadsWithReplies > 0 ? Math.round(totalRepliesCount / threadsWithReplies * 10) / 10 : 0;
+
+        // Promedio de posts por día
+        const daysSinceStart = oldestPost ? Math.max(1, Math.ceil((now - oldestPost) / (1000 * 60 * 60 * 24))) : 1;
+        const avgPostsPerDay = Math.round(totalPosts / daysSinceStart * 10) / 10;
+
+        // Tasa de reportes
+        const reportRate = totalPosts > 0 ? Math.round((reportsSnapshot.size / totalPosts) * 100 * 10) / 10 : 0;
+
+        // Promedio de tamaño de archivo
+        const avgFileSize = totalFiles > 0 ? Math.round(totalFileSize / totalFiles) : 0;
+
+        // Tiempo activo (días desde el primer post)
+        const uptimeDays = oldestPost ? Math.ceil((now - oldestPost) / (1000 * 60 * 60 * 24)) : 0;
+
+        // Actualizar elementos HTML
+        document.getElementById('totalThreads').textContent = threadsSnapshot.size;
+        document.getElementById('totalReplies').textContent = repliesSnapshot.size;
+        document.getElementById('totalPosts').textContent = totalPosts;
+        document.getElementById('totalUsers').textContent = uniqueUsers.size;
+
+        document.getElementById('postsToday').textContent = postsToday;
+        document.getElementById('postsThisWeek').textContent = postsThisWeek;
+        document.getElementById('postsThisMonth').textContent = postsThisMonth;
+        document.getElementById('avgPostsPerDay').textContent = avgPostsPerDay;
 
         document.getElementById('totalFiles').textContent = totalFiles;
         document.getElementById('totalFileSize').textContent = formatFileSize(totalFileSize);
+        document.getElementById('avgFileSize').textContent = formatFileSize(avgFileSize);
+        document.getElementById('imagesCount').textContent = imagesCount;
 
-        // Calcular posts de hoy
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        let postsToday = 0;
+        document.getElementById('totalReports').textContent = totalActiveReports;
+        document.getElementById('totalBans').textContent = totalActiveBans;
+        document.getElementById('deletedPosts').textContent = deletedPosts;
+        document.getElementById('reportRate').textContent = reportRate + '%';
 
-        threadsSnapshot.forEach(doc => {
-            const timestamp = doc.data().timestamp?.toDate();
-            if (timestamp >= today) postsToday++;
-        });
+        document.getElementById('mostActiveBoard').textContent = mostActiveBoard;
+        document.getElementById('threadsWithReplies').textContent = threadsWithReplies;
+        document.getElementById('avgRepliesPerThread').textContent = avgRepliesPerThread;
 
-        repliesSnapshot.forEach(doc => {
-            const timestamp = doc.data().timestamp?.toDate();
-            if (timestamp >= today) postsToday++;
-        });
+        document.getElementById('dbSize').textContent = formatFileSize(totalFileSize + (totalPosts * 1024)); // Estimado
+        document.getElementById('lastActivity').textContent = lastActivity ? formatTimeAgo(lastActivity) : '-';
+        document.getElementById('peakActivity').textContent = Math.max(postsToday, postsThisWeek, postsThisMonth);
+        document.getElementById('uptime').textContent = uptimeDays + ' días';
 
-        document.getElementById('totalToday').textContent = postsToday;
     } catch (error) {
-        // Error al cargar estadísticas
+        console.error('Error al cargar estadísticas:', error);
+        showSimpleNotification('Error al cargar estadísticas', 'error');
     }
 }
 
@@ -688,15 +849,15 @@ async function createBanInterface(container, ipBanSystem) {
         <header>
             <h2>Banear Nueva IP</h2>
         </header>
-            <table style="width: 100%;">
+            <table>
                 <tr>
-                    <td style="width: 100px; font-weight: bold;">IP:</td>
-                    <td><input type="text" id="banIP" placeholder="192.168.1.1" style="width: 100%; padding: 5px; margin-bottom: 5px;"></td>
+                    <td>IP:</td>
+                    <td><input type="text" id="banIP" placeholder="192.168.1.1"></td>
                 </tr>
                 <tr>
-                    <td style="font-weight: bold;">Razón:</td>
+                    <td>Razón:</td>
                     <td>
-                        <select id="banReason" style="width: 100%; padding: 5px; margin-bottom: 5px;">
+                        <select id="banReason">
                             <option value="Spam">Spam</option>
                             <option value="Contenido inapropiado">Contenido inapropiado</option>
                             <option value="Trolling">Trolling</option>
@@ -706,9 +867,9 @@ async function createBanInterface(container, ipBanSystem) {
                     </td>
                 </tr>
                 <tr>
-                    <td style="font-weight: bold;">Duración:</td>
+                    <td>Duración:</td>
                     <td>
-                        <select id="banDuration" style="width: 100%; padding: 5px; margin-bottom: 5px;">
+                        <select id="banDuration">
                             <option value="3600000">1 hora</option>
                             <option value="86400000">1 día</option>
                             <option value="604800000">1 semana</option>
@@ -718,7 +879,9 @@ async function createBanInterface(container, ipBanSystem) {
                     </td>
                 </tr>
                 <tr>
-                    <td><button onclick="executeBan()" style="padding: 5px 10px; background: #d32f2f; color: white; border: none; cursor: pointer;">Banear IP</button></td>
+                    <td>
+                        <button onclick="executeBan()" style="padding: 5px 10px; background: #d32f2f; color: white; border: none; cursor: pointer;">Banear IP</button>
+                    </td>
                 </tr>
             </table>
         </div>
@@ -1062,15 +1225,15 @@ window.loadNewsList = async function() {
             const newsId = doc.id;
             
             html += `
-                <div class="admin-news-item">
-                    <div class="news-item-header">
+                <div>
+                    <header>
                         <h4>${item.title}</h4>
-                        <span class="news-item-date">${item.date}</span>
-                    </div>
-                    <div class="news-item-preview">${item.preview}</div>
-                    <div class="news-item-actions">
-                        <button onclick="editNews('${newsId}')" class="btn-secondary">Editar</button>
-                        <button onclick="deleteNews('${newsId}')" class="btn-danger">Eliminar</button>
+                        <span>${item.date}</span>
+                    </header>
+                    <div>${item.preview}</div>
+                    <div>
+                        <button onclick="editNews('${newsId}')">Editar</button>
+                        <button onclick="deleteNews('${newsId}')">Eliminar</button>
                     </div>
                 </div>
             `;

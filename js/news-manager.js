@@ -116,6 +116,7 @@ async function loadUpdates() {
                 
                 return {
                     id: doc.id,
+                    postId: data.postId || data.threadId || data.number,
                     board: data.board,
                     title: data.title || data.subject,
                     content: data.content || data.comment,
@@ -154,7 +155,7 @@ async function loadUpdates() {
                     <td>${displayTitle}</td>
                     <td>${formatTimeAgo(post.mostRecentActivity)}</td>
                     <td>
-                        <a href="reply.html?board=${post.board}&thread=${post.id}">Ver</a>
+                        <a href="reply.html?board=${post.board}&thread=${post.postId}">Ver</a>
                     </td>
                 </tr>
             `;

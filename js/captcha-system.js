@@ -82,7 +82,7 @@ class CaptchaSystem {
                 <span>
                     ${this.currentChallenge.question}
                 </span>
-                <input type="number" id="captcha-answer" name="captcha-answer"placeholder="Tu respuesta" autocomplete="off" style="padding: 4px" required>
+                <input type="number" id="captcha-answer" name="captcha-answer" autocomplete="off" style="padding: 4px; width: 50px;" required>
                 <input type="hidden" id="captcha-token" name="captcha-token" value="${this.token}">
                 <button type="button" id="refresh-captcha" title="Generar nuevo CAPTCHA">
                     &circlearrowleft;

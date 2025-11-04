@@ -24,12 +24,10 @@
     <div class="container">
 
         <!-- Contenedor de noticias -->
-        <div class="news-section">
-            <div id="all-news">
-                <div class="loading">
-                    <div class="loading-spinner"></div>
-                    <span>Cargando noticias...</span>
-                </div>
+        <div id="all-news">
+            <div class="loading loading-mod">
+                <div class="loading-spinner"></div>
+                <span>Cargando noticias...</span>
             </div>
         </div>
 
@@ -74,7 +72,7 @@
                 }
 
                 // Mostrar todas las noticias ordenadas por fecha
-                let html = `<table class="news-table">
+                let html = `<table class="news-table news-section">
                         <tbody>`;
 
                 querySnapshot.forEach((doc) => {
@@ -108,7 +106,7 @@
 
         function showDefaultNewsPage(container) {
             container.innerHTML = `
-                <table class="news-table">
+                <table class="news-table news-section">
                     <tbody>
                         <tr id="news-1">
                             <th>

@@ -123,7 +123,7 @@ export async function displayStats() {
 
     // Mostrar indicador de carga
     statsContainer.innerHTML = `
-        <div class="stats-loading">
+        <div class="loading">
             <div class="loading-spinner"></div>
             <span>Cargando estadísticas...</span>
         </div>
@@ -136,27 +136,27 @@ export async function displayStats() {
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-number">${stats.totalThreads.toLocaleString()}</div>
-                    <div class="stat-label">Hilos Totales</div>
+                    <div>Hilos Totales</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${stats.totalReplies.toLocaleString()}</div>
-                    <div class="stat-label">Respuestas</div>
+                    <div>Respuestas</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${stats.uniqueUsers.toLocaleString()}</div>
-                    <div class="stat-label">Usuarios Únicos</div>
+                    <div>Usuarios Únicos</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${formatFileSize(stats.totalFileSize)}</div>
-                    <div class="stat-label">Archivos Subidos</div>
+                    <div>Archivos Subidos</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${stats.totalFiles.toLocaleString()}</div>
-                    <div class="stat-label">Total de Archivos</div>
+                    <div>Total de Archivos</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${(stats.totalThreads + stats.totalReplies).toLocaleString()}</div>
-                    <div class="stat-label">Posts Totales</div>
+                    <div>Posts Totales</div>
                 </div>
             </div>
         `;

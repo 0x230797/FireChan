@@ -43,10 +43,6 @@ function checkAdminStatusForForm() {
     }
 }
 
-
-
-
-
 // Función para subir imagen a ImgBB
 async function uploadImageToImgBB(file) {
     if (!imgbbConfig.apiKey || imgbbConfig.apiKey === "TU_API_KEY_AQUI") {
@@ -103,7 +99,11 @@ async function uploadImageToImgBB(file) {
 
 async function loadThreads() {
     const threadsContainer = document.getElementById('threadsContainer');
-    threadsContainer.innerHTML = 'Cargando threads...';
+    threadsContainer.innerHTML = `
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <span>Cargando publicaciones...</span>
+        </div>`;
     
     try {
         const q = query(
@@ -366,7 +366,7 @@ async function submitReport(contentId, contentType, postId, name, comment, image
             board,
             reason,
             timestamp: serverTimestamp(),
-            reporterIP: reporterIP  // Registrar IP del que reporta
+            reporterIP: reporterIP
         });
         
         alert('Reporte enviado exitosamente. Los administradores lo revisarán.');
@@ -414,7 +414,7 @@ async function loadLastReplies(threadId, totalReplies, threadPostId) {
             const omittedCount = totalReplies - 5;
             
             // Contar imágenes en las respuestas omitidas
-            const omittedReplies = allReplies.slice(5); // Las respuestas que no se muestran
+            const omittedReplies = allReplies.slice(5);
             const omittedImagesCount = omittedReplies.filter(reply => reply.imageUrl).length;
             
             let imagesText = '';
