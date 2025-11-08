@@ -34,12 +34,10 @@ a:active, a:hover {
 
 .header h1 {
     color: var(--title);
-    font-size: 20pt;
 }
 
 .header .subtitle {
     color: var(--text-light-gray);
-    font-size: 10pt;
 }
 
 .nav {
@@ -104,8 +102,6 @@ a:active, a:hover {
 .ban-panel header h2,
 .ban-list header h2 {
     color: var(--title);
-    font-size: 14pt;
-    font-weight: bold;
     text-align: center;
 }
 
@@ -122,7 +118,7 @@ a:active, a:hover {
 .news-table td,
 .updates-table td,
 .boards-table td {
-    padding: 8px;
+    padding: 5px;
     text-align: left;
 }
 
@@ -139,15 +135,13 @@ a:active, a:hover {
     background-color: #e2e6f3;
 }
 
-#all-news h2 {
-    font-size: 12pt;
+#all-news h4 {
     float: left;
 }
 
 #all-news time {
     float: right;
     color: var(--text-light-gray);
-    font-size: 12pt;
 }
 
 .stats-category h3 {
@@ -230,7 +224,6 @@ a:active, a:hover {
     justify-content: center;
     padding: 20px;
     color: var(--text-gray);
-    font-size: 12pt;
 }
 
 .loading-mod {
@@ -259,7 +252,6 @@ a:active, a:hover {
     text-align: center;
     padding: 40px;
     color: var(--text-red);
-    font-size: 12pt;
 }
 
 .retry-btn {
@@ -269,7 +261,6 @@ a:active, a:hover {
     padding: 8px 16px;
     margin-left: 10px;
     cursor: pointer;
-    font-size: 11pt;
     border-radius: 3px;
 }
 
@@ -342,10 +333,40 @@ a:active, a:hover {
     margin-top: 10px;
 }
 
-.admin-news-list div {
+.admin-news-list > div {
+    background-color: #eee;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+}
+
+.admin-news-list header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 8px;
+}
+
+.admin-news-list header h4 {
+    color: var(--title);
+    margin: 0;
+}
+
+.admin-news-list header span {
+    color: var(--text-light-gray);
+}
+
+.admin-news-list > div > div:nth-child(2) {
+    color: var(--text-gray);
+    line-height: 1.4;
+    margin: 8px;
+}
+
+.admin-news-list > div > div:last-child {
+    display: flex;
+    gap: 8px;
+    margin: 8px;
+    justify-content: flex-end;
+
 }
 
 /* Estilo especial para campos de admin deshabilitados */
@@ -359,7 +380,8 @@ a:active, a:hover {
 
 .post-form button,
 .news-form button,
-.news-controls button {
+.news-controls button,
+.news-list button {
     border: 1px solid var(--border);
     color: #0f0c5d;
     padding: 5px 10px;
@@ -368,7 +390,8 @@ a:active, a:hover {
 
 .post-form button:hover,
 .news-form button:hover,
-.news-controls button:hover {
+.news-controls button:hover,
+.news-list button:hover {
     background-color: #c5cfe0;
 }
 
@@ -532,7 +555,6 @@ a:active, a:hover {
 
 .backlink {
     color: var(--hyperlink-hover);
-    font-size: 8pt;
     margin-left: 5px;
 }
 
@@ -609,7 +631,6 @@ a:active, a:hover {
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     z-index: 9999;
     padding: 8px;
-    font-size: 10pt;
     pointer-events: none;
     max-width: 400px;
 }
@@ -625,12 +646,10 @@ a:active, a:hover {
 
 .post-preview-tooltip .thread-header,
 .post-preview-tooltip .reply-header {
-    font-size: 10pt;
     margin-bottom: 5px;
 }
 
 .post-preview-tooltip .comment {
-    font-size: 10pt;
     overflow: hidden;
 }
 
@@ -658,7 +677,6 @@ a:active, a:hover {
 .post-preview-tooltip .preview-footer a {
     color: var(--hyperlink);
     text-decoration: none;
-    font-size: 8pt;
 }
 
 .post-preview-tooltip .preview-footer a:hover {
@@ -769,7 +787,6 @@ a:active, a:hover {
 
 .content-info {
     color: var(--text-gray);
-    font-size: 9pt;
 }
 
 .content-info strong {
@@ -837,14 +854,12 @@ a:active, a:hover {
 /* ========== PÁGINA DE REGLAS ========== */
 .rules-content h2 {
     color: var(--title);
-    font-size: 18pt;
     margin-bottom: 20px;
     text-align: center;
 }
 
 .rules-section h3 {
     color: var(--title);
-    font-size: 14pt;
     margin-bottom: 10px;
 }
 
@@ -862,7 +877,6 @@ a:active, a:hover {
 
 .board-rules h4 {
     color: var(--title);
-    font-size: 11pt;
     margin-bottom: 5px;
 }
 
@@ -884,7 +898,6 @@ a:active, a:hover {
 .omitted-replies {
     margin: 10px 0;
     color: var(--text-gray);
-    font-size: 9pt;
     font-style: italic;
 }
 
@@ -905,7 +918,6 @@ a:active, a:hover {
     text-align: center;
     padding: 0 20px 20px 20px;
     color: var(--text-light-gray);
-    font-size: 9pt;
 }
 
 /* ========== RESPONSIVE ========== */
@@ -921,14 +933,6 @@ a:active, a:hover {
 
     .stat-card {
         padding: 15px 10px;
-    }
-
-    .stat-number {
-        font-size: 20pt;
-    }
-
-    .stat-label {
-        font-size: 10pt;
     }
 
     .reply-post {
@@ -951,7 +955,6 @@ a:active, a:hover {
 
     .post-preview-tooltip {
         max-width: 90vw;
-        font-size: 8pt;
     }
 
     .post-preview-tooltip .preview-image {
@@ -966,18 +969,6 @@ a:active, a:hover {
 
     .rules-content {
         padding: 10px;
-    }
-
-    .rules-content h2 {
-        font-size: 14pt;
-    }
-
-    .rules-section h3 {
-        font-size: 12pt;
-    }
-
-    .board-rules h4 {
-        font-size: 10pt;
     }
 }
 
