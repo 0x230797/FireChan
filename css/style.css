@@ -132,7 +132,7 @@ a:active, a:hover {
 .news-table tr:nth-child(even),
 .updates-table tr:nth-child(even),
 .boards-table tr:nth-child(even) {
-    background-color: #e2e6f3;
+    background-color: #ebebeb;
 }
 
 #all-news h4 {
@@ -293,6 +293,10 @@ a:active, a:hover {
     width: 100%;
 }
 
+.ban-panel table {
+    border-collapse: separate;
+}
+
 .news-form {
     width: 100%;
 }
@@ -408,6 +412,7 @@ a:active, a:hover {
 .reply-post,
 .report-container {
     display: table;
+    width: 100%;
     background-color: var(--bg);
     border: 1px solid var(--border);
     padding: 10px;
@@ -986,6 +991,7 @@ a:active, a:hover {
 
 .clear {
     clear: both;
+    margin-bottom: 10px;
 }
 
 .f-top {

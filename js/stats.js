@@ -136,15 +136,15 @@ export async function displayStats() {
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-number">${stats.totalThreads.toLocaleString()}</div>
-                    <div>Hilos Totales</div>
+                    <div>Hilos</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${stats.totalReplies.toLocaleString()}</div>
                     <div>Respuestas</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">${stats.uniqueUsers.toLocaleString()}</div>
-                    <div>Usuarios Únicos</div>
+                    <div class="stat-number">${(stats.totalThreads + stats.totalReplies).toLocaleString()}</div>
+                    <div>Publicaciones</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number">${formatFileSize(stats.totalFileSize)}</div>
@@ -155,8 +155,8 @@ export async function displayStats() {
                     <div>Total de Archivos</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">${(stats.totalThreads + stats.totalReplies).toLocaleString()}</div>
-                    <div>Posts Totales</div>
+                    <div class="stat-number">${stats.uniqueUsers.toLocaleString()}</div>
+                    <div>Usuarios Únicos</div>
                 </div>
             </div>
         `;

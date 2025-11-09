@@ -269,14 +269,11 @@ async function loadStats() {
         // Variables para cálculos
         let totalFiles = 0;
         let totalFileSize = 0;
-        let imagesCount = 0;
         let postsToday = 0;
         let postsThisWeek = 0;
         let postsThisMonth = 0;
         let uniqueUsers = new Set();
         let boardStats = {};
-        let threadsWithReplies = 0;
-        let totalRepliesCount = 0;
         let deletedPosts = 0;
         let lastActivity = null;
         let oldestPost = null;
@@ -299,12 +296,9 @@ async function loadStats() {
                 }
             }
 
-            // Contar archivos e imágenes
+            // Contar archivos
             if (thread.imageUrl || thread.fileName) {
                 totalFiles++;
-                if (thread.fileName && /\.(jpg|jpeg|png|gif|webp)$/i.test(thread.fileName)) {
-                    imagesCount++;
-                }
                 if (thread.fileSize) {
                     totalFileSize += thread.fileSize;
                 }
@@ -321,12 +315,6 @@ async function loadStats() {
             // Usuarios únicos
             if (thread.userHash) {
                 uniqueUsers.add(thread.userHash);
-            }
-
-            // Contar si tiene respuestas
-            if (thread.replyCount && thread.replyCount > 0) {
-                threadsWithReplies++;
-                totalRepliesCount += thread.replyCount;
             }
 
             // Posts eliminados
@@ -350,12 +338,9 @@ async function loadStats() {
                 }
             }
 
-            // Contar archivos e imágenes
+            // Contar archivos
             if (reply.imageUrl || reply.fileName) {
                 totalFiles++;
-                if (reply.fileName && /\.(jpg|jpeg|png|gif|webp)$/i.test(reply.fileName)) {
-                    imagesCount++;
-                }
                 if (reply.fileSize) {
                     totalFileSize += reply.fileSize;
                 }
@@ -397,9 +382,6 @@ async function loadStats() {
             }
         });
 
-        // Promedio de respuestas por thread
-        const avgRepliesPerThread = threadsWithReplies > 0 ? Math.round(totalRepliesCount / threadsWithReplies * 10) / 10 : 0;
-
         // Promedio de posts por día
         const daysSinceStart = oldestPost ? Math.max(1, Math.ceil((now - oldestPost) / (1000 * 60 * 60 * 24))) : 1;
         const avgPostsPerDay = Math.round(totalPosts / daysSinceStart * 10) / 10;
@@ -427,7 +409,6 @@ async function loadStats() {
         document.getElementById('totalFiles').textContent = totalFiles;
         document.getElementById('totalFileSize').textContent = formatFileSize(totalFileSize);
         document.getElementById('avgFileSize').textContent = formatFileSize(avgFileSize);
-        document.getElementById('imagesCount').textContent = imagesCount;
 
         document.getElementById('totalReports').textContent = totalActiveReports;
         document.getElementById('totalBans').textContent = totalActiveBans;
@@ -435,12 +416,9 @@ async function loadStats() {
         document.getElementById('reportRate').textContent = reportRate + '%';
 
         document.getElementById('mostActiveBoard').textContent = mostActiveBoard;
-        document.getElementById('threadsWithReplies').textContent = threadsWithReplies;
-        document.getElementById('avgRepliesPerThread').textContent = avgRepliesPerThread;
 
         document.getElementById('dbSize').textContent = formatFileSize(totalFileSize + (totalPosts * 1024)); // Estimado
         document.getElementById('lastActivity').textContent = lastActivity ? formatTimeAgo(lastActivity) : '-';
-        document.getElementById('peakActivity').textContent = Math.max(postsToday, postsThisWeek, postsThisMonth);
         document.getElementById('uptime').textContent = uptimeDays + ' días';
 
     } catch (error) {
@@ -448,8 +426,6 @@ async function loadStats() {
         showSimpleNotification('Error al cargar estadísticas', 'error');
     }
 }
-
-
 
 window.loadThreads = async () => {
     const container = document.getElementById('threadsContainer');
@@ -484,7 +460,7 @@ window.loadThreads = async () => {
 
             threadsHTML += `
                 <div class="thread-container">
-                    <div class="thread-op no-float">
+                    <div class="thread-op">
                         ${fileSection}
                         <div class="post-image">
                             ${thread.imageUrl ? `<img src="${thread.imageUrl}" class="thread-image" onclick="openLightbox(this.src)">` : ''}
@@ -501,6 +477,7 @@ window.loadThreads = async () => {
                         <div class="comment">${processText(thread.comment)}</div>
                     </div>
                 </div>
+                <div class="clear"></div>
             `;
         });
         
@@ -677,7 +654,16 @@ window.loadReports = async () => {
                 (report.timestamp.toDate ? report.timestamp.toDate() : new Date(report.timestamp)) 
                 : new Date();
 
-            // Procesando reporte
+            // Debug: Log para verificar datos del reporte
+            console.log('Procesando reporte:', {
+                contentId: report.contentId,
+                contentType: report.contentType,
+                postId: report.postId,
+                board: report.board,
+                threadId: report.threadId,
+                threadPostIdMapped: threadPostIdMap[report.contentId],
+                replyThreadMapped: replyThreadMap[report.contentId]
+            });
 
             // Crear sección de archivo si hay imagen
             const reportFileSection = report.imageUrl ? `
@@ -691,38 +677,30 @@ window.loadReports = async () => {
             // Construir URL correcta según el tipo de contenido
             let contentUrl;
             if (report.contentType === 'thread') {
-                // Para threads, usar el postId del thread reportado
-                contentUrl = `reply.html?board=${report.board}&thread=${report.postId}`;
+                // Para threads reportados:
+                // 1. Intentar obtener postId del mapa usando contentId (Firebase doc ID)
+                // 2. Si no existe, usar directamente el postId del reporte
+                const threadPostId = threadPostIdMap[report.contentId] || report.postId;
+                contentUrl = `reply.html?board=${report.board}&thread=${threadPostId}`;
             } else {
-                // Para respuestas, buscar el threadId correcto
+                // Para respuestas reportadas:
                 let actualThreadId = report.threadId;
-                let threadPostId;
                 
-                // Si threadId es undefined, buscar en el mapa de respuestas
+                // Si no hay threadId en el reporte, buscar en el mapa de respuestas
                 if (!actualThreadId && report.contentId) {
                     actualThreadId = replyThreadMap[report.contentId];
                 }
                 
-                // Si aún no tenemos threadId, verificar si contentId es en realidad un threadId
-                if (!actualThreadId && report.contentId) {
-                    // Verificar si contentId existe en threadPostIdMap (es decir, si es un thread)
-                    threadPostId = threadPostIdMap[report.contentId];
-                    if (threadPostId) {
-                        actualThreadId = report.contentId;
-                    }
+                // Obtener el postId del thread padre
+                let threadPostId = actualThreadId ? threadPostIdMap[actualThreadId] : null;
+                
+                // Si no encontramos threadPostId, usar el postId del reporte como fallback
+                // (asumiendo que puede ser el postId del thread padre)
+                if (!threadPostId) {
+                    threadPostId = report.postId;
                 }
                 
-                // Si no obtuvimos threadPostId arriba, intentar obtenerlo normalmente
-                if (!threadPostId && actualThreadId) {
-                    threadPostId = threadPostIdMap[actualThreadId];
-                }
-                
-                if (threadPostId) {
-                    contentUrl = `reply.html?board=${report.board}&thread=${threadPostId}#${report.postId}`;
-                } else {
-                    // Fallback: usar el threadId directamente si no se encuentra el postId
-                    contentUrl = `reply.html?board=${report.board}&thread=${actualThreadId || 'unknown'}#${report.postId}`;
-                }
+                contentUrl = `reply.html?board=${report.board}&thread=${threadPostId}#${report.postId}`;
             }
 
             reportsHTML += `
@@ -737,14 +715,14 @@ window.loadReports = async () => {
                             <span class="name">${report.name || 'Anónimo'}</span>
                             <span class="date">${timestamp.toLocaleString()}</span>
                             <span class="id">No.${report.postId || 'N/A'}</span>
-                            <span class="ip" style="color: #666; font-family: monospace; cursor: pointer; text-decoration: underline;" onclick="copyIP('${report.userIP}')" title="Clic para copiar IP del autor">IP: ${report.userIP || 'No disponible'}</span>
-                            [<a href="${contentUrl}">Ver contenido</a>]
+                            <span class="ip" style="color: #d32f2f; font-family: monospace; cursor: pointer; text-decoration: underline;" onclick="copyIP('${report.userIP}')" title="Clic para copiar IP del AUTOR">IP Autor: ${report.userIP || 'No disponible'}</span>
+                            [<a href="${contentUrl}" target="_blank">Ver contenido</a>]
                             <button class="delete-btn" onclick="dismissReport('${doc.id}')">[Descartar]</button>
                             <button class="delete-btn" onclick="deleteReportedContent('${report.contentId}', '${report.contentType}', '${doc.id}')">[Eliminar Contenido]</button>
                         </div>
                         <div class="comment">
                             <p><strong>Razón del reporte:</strong> ${report.reason}</p>
-                            <p><strong>IP del que reporta:</strong> <span style="font-family: monospace; color: #666; cursor: pointer; text-decoration: underline;" onclick="copyIP('${report.reporterIP}')" title="Clic para copiar IP">${report.reporterIP || 'No disponible'}</span></p>
+                            <p><strong>IP del que reporta:</strong> <span style="font-family: monospace; color: #4a90e2; cursor: pointer; text-decoration: underline;" onclick="copyIP('${report.reporterIP}')" title="Clic para copiar IP del reportero">${report.reporterIP || 'No disponible'}</span></p>
                             <p><strong>Contenido reportado:</strong></p>
                             <div>${processText(report.comment)}</div>
                         </div>
@@ -771,19 +749,51 @@ window.dismissReport = async (reportId) => {
 };
 
 window.deleteReportedContent = async (contentId, contentType, reportId) => {
+    if (!contentId) {
+        alert('Error: ID de contenido no disponible');
+        return;
+    }
+    
     if (!confirm(`¿Eliminar este ${contentType === 'thread' ? 'thread' : 'respuesta'} reportado?`)) return;
 
     try {
+        console.log('Eliminando contenido:', { contentId, contentType, reportId });
+        
         if (contentType === 'thread') {
-            // Eliminar thread y sus respuestas
+            // Verificar que el thread existe antes de eliminar
+            const threadDoc = await getDoc(doc(db, 'threads', contentId));
+            if (!threadDoc.exists()) {
+                alert('Error: El thread no existe o ya fue eliminado');
+                // Eliminar solo el reporte
+                await deleteDoc(doc(db, 'reports', reportId));
+                loadReports();
+                return;
+            }
+            
+            // Eliminar thread
             await deleteDoc(doc(db, 'threads', contentId));
+            
+            // Eliminar todas las respuestas del thread
             const repliesQuery = query(collection(db, 'replies'), where('threadId', '==', contentId));
             const repliesSnapshot = await getDocs(repliesQuery);
             const deletePromises = repliesSnapshot.docs.map(doc => deleteDoc(doc.ref));
             await Promise.all(deletePromises);
+            
+            console.log(`Thread eliminado junto con ${repliesSnapshot.size} respuestas`);
         } else {
+            // Verificar que la respuesta existe antes de eliminar
+            const replyDoc = await getDoc(doc(db, 'replies', contentId));
+            if (!replyDoc.exists()) {
+                alert('Error: La respuesta no existe o ya fue eliminada');
+                // Eliminar solo el reporte
+                await deleteDoc(doc(db, 'reports', reportId));
+                loadReports();
+                return;
+            }
+            
             // Eliminar respuesta
             await deleteDoc(doc(db, 'replies', contentId));
+            console.log('Respuesta eliminada');
         }
 
         // Eliminar el reporte
@@ -792,6 +802,7 @@ window.deleteReportedContent = async (contentId, contentType, reportId) => {
         loadReports();
         alert('Contenido eliminado exitosamente');
     } catch (error) {
+        console.error('Error al eliminar contenido:', error);
         alert('Error al eliminar el contenido: ' + error.message);
     }
 };
@@ -890,8 +901,8 @@ async function createBanInterface(container, ipBanSystem) {
             <header>
                 <h2>IPs Baneadas</h2>
             </header>
-            <div>
-                <span id="banCount" style="margin-left: 15px; color: #666;">Cargando...</span>
+            <div style="padding: 10px 0 0 10px; color: #666;">
+                <span id="banCount">Cargando...</span>
             </div>
             <div id="bansList" style="border: 1px solid #ddd; border-radius: 5px; padding: 10px; min-height: 100px;">
                 Cargando lista de baneos...
@@ -998,6 +1009,14 @@ window.executeBan = async () => {
         
         // El tercer parámetro debe ser duration en milisegundos (null para permanente)
         const banDuration = duration > 0 ? duration : null;
+        
+        // EJECUTAR EL BANEO
+        const result = await ipBanSystem.banIP(ip, reason, banDuration, adminName);
+        
+        if (!result.success) {
+            alert('Error al banear IP: ' + result.message);
+            return;
+        }
         
         // Limpiar formulario
         document.getElementById('banIP').value = '';

@@ -228,6 +228,8 @@ El sistema de baneos incluye estilos específicos para overlays y notificaciones
 
 ## Reglas de Firestore Recomendadas
 
+### Reglas de Desarrollo (Permisivas)
+
 ```javascript
 rules_version = '2';
 service cloud.firestore {
@@ -255,6 +257,17 @@ service cloud.firestore {
       allow write: if false; // Solo via admin o server-side
     }
     
+    // Noticias - lectura pública, escritura solo admins
+    match /news/{document=**} {
+      allow read: if true;
+      allow write: if false; // Solo via admin
+    }
+    
+    // CAPTCHA challenges - lectura y escritura necesaria para validación
+    match /captcha_challenges/{document=**} {
+      allow read, write: if true; // Necesario para sistema anti-spam
+    }
+    
     // Contadores - lectura pública, escritura libre para IDs
     match /counters/{document=**} {
       allow read, write: if true;
@@ -263,39 +276,307 @@ service cloud.firestore {
 }
 ```
 
-### Reglas de Producción Recomendadas
+### Reglas de Producción (RECOMENDADAS - Seguridad Máxima)
 
-Para un entorno de producción más seguro, considera estas reglas más restrictivas:
+Para un entorno de producción más seguro y optimizado:
 
 ```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Validación básica de rate limiting y tamaño de contenido
+    
+    // ================ FUNCIONES DE UTILIDAD ================
+    
+    // Verificar si el usuario es administrador autenticado
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.email in [
+               'admin@firechan.org',
+               // Agregar emails de admins autorizados aquí
+             ];
+    }
+    
+    // Validar tamaño y formato de contenido
     function isValidContent(data) {
-      return data.comment.size() <= 2000 && 
-             data.name.size() <= 50;
+      return data.comment != null &&
+             data.comment is string &&
+             data.comment.size() > 0 &&
+             data.comment.size() <= 2000 &&
+             data.name.size() <= 50 &&
+             (!('subject' in data) || data.subject.size() <= 100);
     }
     
-    match /threads/{document=**} {
-      allow read: if true;
-      allow create: if isValidContent(resource.data);
-      allow update, delete: if false; // Solo admin
+    // Validar estructura de thread
+    function isValidThread(data) {
+      return isValidContent(data) &&
+             data.board != null &&
+             data.board is string &&
+             data.board.size() <= 20 &&
+             data.postId != null &&
+             data.postId is int &&
+             data.timestamp != null;
     }
     
-    match /replies/{document=**} {
-      allow read: if true;
-      allow create: if isValidContent(resource.data);
-      allow update, delete: if false; // Solo admin
+    // Validar estructura de reply
+    function isValidReply(data) {
+      return isValidContent(data) &&
+             data.threadId != null &&
+             data.threadId is string &&
+             data.postId != null &&
+             data.postId is int &&
+             data.timestamp != null;
     }
     
-    match /ip_bans/{document=**} {
+    // Validar que la IP no esté baneada (simplificado, mejor en backend)
+    function isNotBanned() {
+      // Esta validación es básica. La verdadera validación
+      // debe hacerse en el cliente antes de enviar
+      return true; 
+    }
+    
+    // ================ COLECCIONES ================
+    
+    // THREADS - Posts principales
+    match /threads/{threadId} {
+      // Lectura pública
       allow read: if true;
-      allow write: if false; // Solo server-side functions
+      
+      // Creación solo con contenido válido
+      allow create: if isValidThread(request.resource.data) &&
+                      isNotBanned();
+      
+      // Actualización solo para incrementar contador de respuestas
+      // o admins para cualquier cambio
+      allow update: if isAdmin() ||
+                      (request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['replyCount']));
+      
+      // Eliminación solo admins
+      allow delete: if isAdmin();
+    }
+    
+    // REPLIES - Respuestas a threads
+    match /replies/{replyId} {
+      // Lectura pública
+      allow read: if true;
+      
+      // Creación solo con contenido válido
+      allow create: if isValidReply(request.resource.data) &&
+                      isNotBanned() &&
+                      // Verificar que el thread padre existe
+                      exists(/databases/$(database)/documents/threads/$(request.resource.data.threadId));
+      
+      // Sin actualizaciones de usuarios normales
+      allow update: if isAdmin();
+      
+      // Eliminación solo admins
+      allow delete: if isAdmin();
+    }
+    
+    // REPORTS - Sistema de reportes
+    match /reports/{reportId} {
+      // Lectura solo admins
+      allow read: if isAdmin();
+      
+      // Crear reporte con validación
+      allow create: if request.resource.data.contentId != null &&
+                      request.resource.data.contentType != null &&
+                      request.resource.data.reason != null &&
+                      request.resource.data.reason is string &&
+                      request.resource.data.reason.size() > 0 &&
+                      request.resource.data.reason.size() <= 200 &&
+                      request.resource.data.timestamp != null;
+      
+      // Solo admins pueden actualizar/eliminar
+      allow update, delete: if isAdmin();
+    }
+    
+    // IP_BANS - Sistema de baneos
+    match /ip_bans/{banId} {
+      // Lectura solo para verificar si están baneados (limitada)
+      allow read: if true;
+      
+      // Escritura solo admins o backend
+      allow write: if isAdmin();
+    }
+    
+    // NEWS - Noticias del sitio
+    match /news/{newsId} {
+      // Lectura pública
+      allow read: if true;
+      
+      // Solo admins pueden gestionar noticias
+      allow write: if isAdmin();
+    }
+    
+    // CAPTCHA_CHALLENGES - Sistema anti-spam
+    match /captcha_challenges/{challengeId} {
+      // Lectura para validar respuestas
+      allow read: if true;
+      
+      // Creación para generar desafíos
+      allow create: if request.resource.data.token != null &&
+                      request.resource.data.answer != null &&
+                      request.resource.data.timestamp != null;
+      
+      // Actualización para marcar como usado/verificado
+      allow update: if request.resource.data.verified != null ||
+                      request.resource.data.attempts != null;
+      
+      // Eliminación automática después de TTL (mejor con Cloud Functions)
+      allow delete: if true;
+    }
+    
+    // COUNTERS - Sistema de IDs secuenciales
+    match /counters/{counterId} {
+      // Lectura pública
+      allow read: if true;
+      
+      // Escritura controlada (crear contador inicial)
+      allow create: if counterId == 'postIdCounter' &&
+                      request.resource.data.value != null &&
+                      request.resource.data.value is int;
+      
+      // Actualización con incremento atómico
+      allow update: if counterId == 'postIdCounter' &&
+                      request.resource.data.value == resource.data.value + 1;
+      
+      // Sin eliminación
+      allow delete: if false;
     }
   }
 }
 ```
+
+### Mejoras de Seguridad Adicionales Recomendadas
+
+#### 1. **Implementar Cloud Functions para Validación Backend**
+
+```javascript
+// functions/index.js
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+admin.initializeApp();
+
+// Validar y limpiar contenido antes de guardar
+exports.validatePost = functions.firestore
+  .document('{collection}/{docId}')
+  .onCreate(async (snap, context) => {
+    const data = snap.data();
+    
+    // Verificar IP baneada
+    const ipBansRef = admin.firestore().collection('ip_bans');
+    const banQuery = await ipBansRef
+      .where('ip', '==', data.userIP)
+      .where('active', '==', true)
+      .get();
+    
+    if (!banQuery.empty) {
+      // Eliminar el post de usuario baneado
+      await snap.ref.delete();
+      console.log(`Post bloqueado de IP baneada: ${data.userIP}`);
+    }
+    
+    // Validar contenido (anti-spam, palabras prohibidas, etc.)
+    // ...
+  });
+
+// Limpiar CAPTCHA challenges expirados
+exports.cleanupExpiredCaptchas = functions.pubsub
+  .schedule('every 1 hours')
+  .onRun(async (context) => {
+    const now = admin.firestore.Timestamp.now();
+    const expiredCaptchas = await admin.firestore()
+      .collection('captcha_challenges')
+      .where('timestamp', '<', new Date(now.toMillis() - 3600000))
+      .get();
+    
+    const batch = admin.firestore().batch();
+    expiredCaptchas.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+    
+    console.log(`Eliminados ${expiredCaptchas.size} CAPTCHAs expirados`);
+  });
+```
+
+#### 2. **Índices Compuestos Recomendados**
+
+Crea estos índices en Firebase Console para optimizar queries:
+
+```
+Collection: threads
+- board (Ascending) + timestamp (Descending)
+
+Collection: replies  
+- threadId (Ascending) + timestamp (Ascending)
+- threadId (Ascending) + timestamp (Descending)
+
+Collection: reports
+- timestamp (Descending)
+
+Collection: ip_bans
+- ip (Ascending) + active (Ascending)
+- active (Ascending) + expiresAt (Ascending)
+
+Collection: captcha_challenges
+- token (Ascending) + verified (Ascending)
+- ip (Ascending) + timestamp (Descending)
+```
+
+#### 3. **Rate Limiting (App Check)**
+
+Habilita Firebase App Check para proteger contra abuso:
+
+```javascript
+// En firebase-config.js, agregar:
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+
+const appCheck = initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_V3_SITE_KEY'),
+  isTokenAutoRefreshEnabled: true
+});
+```
+
+#### 4. **Configuración de Seguridad Storage (si usas Firebase Storage)**
+
+```javascript
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /images/{imageId} {
+      // Solo lectura pública
+      allow read: if true;
+      
+      // Solo escritura con validación de tamaño
+      allow write: if request.resource.size < 10 * 1024 * 1024 && // 10MB máx
+                     request.resource.contentType.matches('image/.*');
+    }
+  }
+}
+```
+
+### Resumen de Cambios para Producción
+
+**✅ Implementar:**
+1. Reglas de Firestore con validación estricta
+2. Autenticación Firebase para operaciones de admin
+3. Validación de contenido (tamaño, formato)
+4. Verificación de existencia de documentos padre
+5. Protección contra modificaciones no autorizadas
+6. Rate limiting con App Check
+7. Cloud Functions para validación backend
+8. Índices compuestos para performance
+9. Limpieza automática de datos temporales (CAPTCHA)
+10. Monitoreo y alertas de uso anormal
+
+**🔒 Beneficios de Seguridad:**
+- Previene spam y flood
+- Bloquea IPs baneadas efectivamente
+- Valida estructura de datos
+- Protege operaciones de admin
+- Optimiza queries (índices)
+- Limpia datos obsoletos automáticamente
+- Protege contra inyección de datos maliciosos
 ## Contribuciones
 
 Las contribuciones son bienvenidas. Por favor:

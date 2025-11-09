@@ -165,6 +165,7 @@ async function loadThreads() {
                     </div>
                     ${repliesHTML}
                 </div>
+                <div class="clear"></div>
             `;
         }
         
@@ -355,6 +356,31 @@ async function submitReport(contentId, contentType, postId, name, comment, image
     try {
         // Obtener IP del usuario que reporta
         const reporterIP = await ipBanSystem.getUserIP();
+        
+        // Obtener IP del autor del contenido reportado
+        let authorIP = 'No disponible';
+        let threadId = null;
+        
+        try {
+            if (contentType === 'thread') {
+                // Obtener la IP del thread
+                const threadDoc = await getDoc(doc(db, 'threads', contentId));
+                if (threadDoc.exists()) {
+                    const threadData = threadDoc.data();
+                    authorIP = threadData.userIP || threadData.ip || 'No disponible';
+                }
+            } else if (contentType === 'reply') {
+                // Obtener la IP de la respuesta
+                const replyDoc = await getDoc(doc(db, 'replies', contentId));
+                if (replyDoc.exists()) {
+                    const replyData = replyDoc.data();
+                    authorIP = replyData.userIP || replyData.ip || 'No disponible';
+                    threadId = replyData.threadId; // Guardar threadId para respuestas
+                }
+            }
+        } catch (error) {
+            console.error('Error al obtener IP del autor:', error);
+        }
 
         await addDoc(collection(db, 'reports'), {
             contentId,
@@ -366,7 +392,9 @@ async function submitReport(contentId, contentType, postId, name, comment, image
             board,
             reason,
             timestamp: serverTimestamp(),
-            reporterIP: reporterIP
+            reporterIP: reporterIP,
+            userIP: authorIP, // IP del autor del contenido
+            threadId: threadId // Solo para respuestas
         });
         
         alert('Reporte enviado exitosamente. Los administradores lo revisarán.');
@@ -395,7 +423,11 @@ async function loadLastReplies(threadId, totalReplies, threadPostId) {
         // Obtener todas las respuestas y separar las que se mostrarán
         let count = 0;
         querySnapshot.forEach((doc) => {
-            const replyData = doc.data();
+            const replyData = { 
+                ...doc.data(), 
+                id: doc.id,
+                threadId: threadId // Asegurar que el threadId esté presente
+            };
             allReplies.push(replyData);
             
             if (count < 5) {
@@ -460,7 +492,7 @@ async function loadLastReplies(threadId, totalReplies, threadPostId) {
                         <span class="name ${nameClass}">${displayName}</span>
                         <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                         <span class="id" onclick="quotePost('${reply.postId || 'N/A'}', '${threadPostId}')" style="cursor: pointer;">No.${reply.postId || 'N/A'}</span>
-                        [<button class="report-btn" onclick="reportPost('${threadId}', 'reply', ${reply.postId}, '${encodeURIComponent(displayName)}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
+                        [<button class="report-btn" onclick="reportPost('${reply.id}', 'reply', ${reply.postId}, '${encodeURIComponent(displayName)}', '${encodeURIComponent(reply.comment)}', '${reply.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
                     </div>
                     <div class="comment">${processText(reply.comment)}</div>
                 </div>

@@ -195,7 +195,7 @@ function displayThread(thread, id) {
                 <span class="name ${nameClass}">${displayName}</span>
                 <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                 <span class="id" onclick="quotePost('${thread.postId || 'N/A'}', '${thread.postId || 'N/A'}')" style="cursor: pointer;">No.${thread.postId || 'N/A'}</span>
-                [<button class="report-btn" onclick="reportPost('${doc.id}', 'reply', ${thread.postId}, '${encodeURIComponent(displayName)}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
+                [<button class="report-btn" onclick="reportPost('${doc.id}', 'thread', ${thread.postId}, '${encodeURIComponent(displayName)}', '${encodeURIComponent(thread.comment)}', '${thread.imageUrl || ''}', '${currentBoard}')">Reportar</button>]
             </div>
             <div class="comment">${processText(thread.comment)}</div>
         </div>
@@ -425,6 +425,31 @@ async function submitReport(contentId, contentType, postId, name, comment, image
     try {
         // Obtener IP del usuario que reporta
         const reporterIP = await ipBanSystem.getUserIP();
+        
+        // Obtener IP del autor del contenido reportado
+        let authorIP = 'No disponible';
+        let threadId = null;
+        
+        try {
+            if (contentType === 'thread') {
+                // Obtener la IP del thread
+                const threadDoc = await getDoc(doc(db, 'threads', contentId));
+                if (threadDoc.exists()) {
+                    const threadData = threadDoc.data();
+                    authorIP = threadData.userIP || threadData.ip || 'No disponible';
+                }
+            } else if (contentType === 'reply') {
+                // Obtener la IP de la respuesta
+                const replyDoc = await getDoc(doc(db, 'replies', contentId));
+                if (replyDoc.exists()) {
+                    const replyData = replyDoc.data();
+                    authorIP = replyData.userIP || replyData.ip || 'No disponible';
+                    threadId = replyData.threadId; // Guardar threadId para respuestas
+                }
+            }
+        } catch (error) {
+            console.error('Error al obtener IP del autor:', error);
+        }
 
         await addDoc(collection(db, 'reports'), {
             contentId,
@@ -436,7 +461,9 @@ async function submitReport(contentId, contentType, postId, name, comment, image
             board,
             reason,
             timestamp: serverTimestamp(),
-            reporterIP: reporterIP  // Registrar IP del que reporta
+            reporterIP: reporterIP,
+            userIP: authorIP, // IP del autor del contenido
+            threadId: threadId // Solo para respuestas
         });
         
         alert('Reporte enviado exitosamente. Los administradores lo revisarán.');
