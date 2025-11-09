@@ -7,6 +7,18 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/reset.css">
     <link rel="shortcut icon" href="favicon.png" type="image/x-icon">
+    <style>
+        /* Protección adicional CSS - Ocultar panel admin por defecto */
+        #adminContent {
+            display: none !important;
+        }
+        #adminContent[data-authenticated="true"] {
+            display: block !important;
+        }
+        #loginPanel {
+            display: block !important;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -22,7 +34,7 @@
     </div>
 
     <div class="container">
-        <div id="loginPanel" class="login-panel">
+        <div id="loginPanel" class="login-panel" style="display: block;">
             <h2>Acceso Administrativo</h2>
             <input type="email" id="adminUser" placeholder="Email del administrador" value="admin@firechan.org">
             <input type="password" id="adminPass" placeholder="Contraseña" value="admin123" onkeypress="handleEnterKey(event)">
@@ -39,7 +51,7 @@
             </div>
         </div>
 
-        <div id="adminContent" class="admin-content">
+        <div id="adminContent" class="admin-content" style="display: none !important;" data-auth-required="true">
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('statistics')">Estadísticas</div>
                 <div class="tab" onclick="switchTab('news')">Noticias</div>

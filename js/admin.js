@@ -84,6 +84,7 @@ function formatTimeAgo(timestamp) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeAuth();
+    startSecurityMonitor();
 });
 
 function initializeAuth() {
@@ -106,16 +107,90 @@ function initializeAuth() {
 }
 
 function showAdminPanel(user) {
-    document.getElementById('loginPanel').style.display = 'none';
-    document.getElementById('adminContent').style.display = 'block';
+    const loginPanel = document.getElementById('loginPanel');
+    const adminContent = document.getElementById('adminContent');
+    
+    loginPanel.style.display = 'none';
+    adminContent.style.display = 'block';
+    adminContent.setAttribute('data-authenticated', 'true');
     
     loadStats();
     loadThreads();
 }
 
 function showLoginPanel() {
-    document.getElementById('loginPanel').style.display = 'block';
-    document.getElementById('adminContent').style.display = 'none';
+    const loginPanel = document.getElementById('loginPanel');
+    const adminContent = document.getElementById('adminContent');
+    
+    loginPanel.style.display = 'block';
+    adminContent.style.display = 'none';
+    adminContent.removeAttribute('data-authenticated');
+}
+
+// ========== FUNCIÓN DE SEGURIDAD CRÍTICA ==========
+// Verificar autenticación antes de CUALQUIER acción administrativa
+function checkAdminAuth() {
+    const { user, isAdmin } = firebaseAuth.getCurrentUser();
+    
+    if (!user || !isAdmin) {
+        alert('⛔ Acceso denegado. Debes iniciar sesión como administrador.');
+        showLoginPanel();
+        return false;
+    }
+    
+    return true;
+}
+
+// Función auxiliar para proteger acciones
+async function executeAdminAction(action, actionName) {
+    if (!checkAdminAuth()) {
+        return false;
+    }
+    
+    try {
+        await action();
+        return true;
+    } catch (error) {
+        console.error(`Error en ${actionName}:`, error);
+        alert(`Error al ejecutar ${actionName}: ${error.message}`);
+        return false;
+    }
+}
+
+// Monitor de seguridad - Verifica periódicamente la autenticación
+function startSecurityMonitor() {
+    // Verificar cada 5 segundos si el panel admin está visible sin autenticación
+    setInterval(() => {
+        const adminContent = document.getElementById('adminContent');
+        const loginPanel = document.getElementById('loginPanel');
+        const { user, isAdmin } = firebaseAuth.getCurrentUser();
+        
+        // Si el panel admin está visible pero no hay autenticación válida
+        if (adminContent && adminContent.style.display !== 'none' && (!user || !isAdmin)) {
+            console.warn('🚨 Intento de acceso no autorizado detectado');
+            showLoginPanel();
+            alert('⛔ Sesión expirada o acceso no autorizado. Por favor inicia sesión.');
+        }
+        
+        // Si el login panel está oculto pero no hay autenticación
+        if (loginPanel && loginPanel.style.display === 'none' && (!user || !isAdmin)) {
+            showLoginPanel();
+        }
+    }, 5000); // Cada 5 segundos
+    
+    // También verificar en cada interacción del usuario
+    document.addEventListener('click', (e) => {
+        const { user, isAdmin } = firebaseAuth.getCurrentUser();
+        const adminContent = document.getElementById('adminContent');
+        
+        // Si hacen clic en cualquier parte del panel admin sin estar autenticados
+        if (adminContent && adminContent.contains(e.target) && (!user || !isAdmin)) {
+            e.preventDefault();
+            e.stopPropagation();
+            showLoginPanel();
+            alert('⛔ Debes iniciar sesión como administrador.');
+        }
+    }, true); // useCapture = true para interceptar antes
 }
 
 window.login = async () => {
@@ -247,6 +322,10 @@ function resetNameFields() {
 }
 
 async function loadStats() {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     try {
         const threadsQuery = query(collection(db, 'threads'));
         const repliesQuery = query(collection(db, 'replies'));
@@ -428,6 +507,10 @@ async function loadStats() {
 }
 
 window.loadThreads = async () => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     const container = document.getElementById('threadsContainer');
     const board = document.getElementById('boardFilter').value;
     
@@ -488,6 +571,10 @@ window.loadThreads = async () => {
 };
 
 window.loadReplies = async () => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     const container = document.getElementById('repliesContainer');
     container.innerHTML = 'Cargando respuestas...';
 
@@ -558,6 +645,10 @@ window.loadReplies = async () => {
 };
 
 window.deleteThread = async (threadId) => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     if (!confirm('¿Estás seguro de que quieres eliminar este thread?')) return;
 
     try {
@@ -576,6 +667,10 @@ window.deleteThread = async (threadId) => {
 };
 
 window.deleteReply = async (replyId) => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     if (!confirm('¿Estás seguro de que quieres eliminar esta respuesta?')) return;
 
     try {
@@ -587,6 +682,10 @@ window.deleteReply = async (replyId) => {
 };
 
 window.switchTab = (tabName) => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     // Ocultar todas las pestañas
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
@@ -620,6 +719,10 @@ window.switchTab = (tabName) => {
 };
 
 window.loadReports = async () => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     const container = document.getElementById('reportsContainer');
     container.innerHTML = 'Cargando reportes...';
 
@@ -738,6 +841,10 @@ window.loadReports = async () => {
 };
 
 window.dismissReport = async (reportId) => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     if (!confirm('¿Descartar este reporte?')) return;
 
     try {
@@ -749,6 +856,10 @@ window.dismissReport = async (reportId) => {
 };
 
 window.deleteReportedContent = async (contentId, contentType, reportId) => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     if (!contentId) {
         alert('Error: ID de contenido no disponible');
         return;
@@ -808,6 +919,10 @@ window.deleteReportedContent = async (contentId, contentType, reportId) => {
 };
 
 window.clearAllReports = async () => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     if (!confirm('¿Eliminar TODOS los reportes? Esta acción no se puede deshacer.')) return;
 
     try {
@@ -826,6 +941,10 @@ window.clearAllReports = async () => {
 
 // Función para cargar la lista de bans
 window.loadBanList = async () => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     const container = document.getElementById('banManagement');
     if (!container) {
         return;
@@ -916,6 +1035,10 @@ async function createBanInterface(container, ipBanSystem) {
 
 // Función para actualizar la lista de baneos
 window.refreshBanList = async () => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     const bansList = document.getElementById('bansList');
     const banCount = document.getElementById('banCount');
     
@@ -982,6 +1105,10 @@ window.refreshBanList = async () => {
 
 // Función para ejecutar un baneo
 window.executeBan = async () => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     const ip = document.getElementById('banIP').value.trim();
     const reason = document.getElementById('banReason').value;
     const duration = parseInt(document.getElementById('banDuration').value);
@@ -1033,6 +1160,10 @@ window.executeBan = async () => {
 
 // Función para remover un ban
 window.removeBan = async (banId) => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     if (!confirm('¿Eliminar este ban?')) {
         return;
     }
@@ -1150,6 +1281,10 @@ window.createInitialAdmin = async () => {
 // ========== FUNCIONES PARA MANEJO DE NOTICIAS ==========
 
 window.createNews = async function() {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     const title = document.getElementById('newsTitle').value.trim();
     const preview = document.getElementById('newsPreview').value.trim();
     const content = document.getElementById('newsContent').value.trim();
@@ -1219,6 +1354,10 @@ window.clearNewsForm = function() {
 };
 
 window.loadNewsList = async function() {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     const container = document.getElementById('newsListContainer');
     
     try {
@@ -1268,6 +1407,10 @@ window.loadNewsList = async function() {
 };
 
 window.editNews = async function(newsId) {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     try {
         // Obtener documento específico de Firebase
         const docRef = doc(db, 'news', newsId);
@@ -1295,6 +1438,10 @@ window.editNews = async function(newsId) {
 };
 
 window.deleteNews = async function(newsId) {
+    if (!checkAdminAuth()) {
+        return;
+    }
+    
     if (!confirm('¿Estás seguro de que quieres eliminar esta noticia?')) {
         return;
     }
