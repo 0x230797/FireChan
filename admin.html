@@ -15,9 +15,6 @@
         #adminContent[data-authenticated="true"] {
             display: block !important;
         }
-        #loginPanel {
-            display: block !important;
-        }
     </style>
 </head>
 <body>
@@ -36,19 +33,9 @@
     <div class="container">
         <div id="loginPanel" class="login-panel" style="display: block;">
             <h2>Acceso Administrativo</h2>
-            <input type="email" id="adminUser" placeholder="Email del administrador" value="admin@firechan.org">
-            <input type="password" id="adminPass" placeholder="Contraseña" value="admin123" onkeypress="handleEnterKey(event)">
+            <input type="email" id="adminUser" placeholder="Email del administrador">
+            <input type="password" id="adminPass" placeholder="Contraseña" onkeypress="handleEnterKey(event)">
             <button onclick="login()">Iniciar Sesión</button>
-            
-            <div class="admin-setup" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
-                <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
-                    <strong>Primera configuración:</strong><br>
-                    Si es tu primera vez, crea una cuenta de administrador:
-                </p>
-                <button onclick="createInitialAdmin()" style="background: #28a745; color: white; border: none; padding: 8px 16px; cursor: pointer;">
-                    Crear Cuenta Admin
-                </button>
-            </div>
         </div>
 
         <div id="adminContent" class="admin-content" style="display: none !important;" data-auth-required="true">

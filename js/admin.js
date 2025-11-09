@@ -37,12 +37,12 @@ function showSimpleNotification(message, type = 'info') {
     
     document.body.appendChild(notification);
     
-    // Remover después de 3 segundos
+    // Remover después de 5 segundos
     setTimeout(() => {
         if (notification.parentNode) {
             notification.parentNode.removeChild(notification);
         }
-    }, 3000);
+    }, 5000);
 }
 
 // Función auxiliar para formatear tiempo relativo
@@ -141,22 +141,6 @@ function checkAdminAuth() {
     return true;
 }
 
-// Función auxiliar para proteger acciones
-async function executeAdminAction(action, actionName) {
-    if (!checkAdminAuth()) {
-        return false;
-    }
-    
-    try {
-        await action();
-        return true;
-    } catch (error) {
-        console.error(`Error en ${actionName}:`, error);
-        alert(`Error al ejecutar ${actionName}: ${error.message}`);
-        return false;
-    }
-}
-
 // Monitor de seguridad - Verifica periódicamente la autenticación
 function startSecurityMonitor() {
     // Verificar cada 5 segundos si el panel admin está visible sin autenticación
@@ -200,7 +184,7 @@ window.login = async () => {
     
     // Validación básica
     if (!email || !password) {
-        showAuthNotification('Por favor ingresa email y contraseña', 'error');
+        showSimpleNotification('Por favor ingresa email y contraseña', 'error');
         return;
     }
 
@@ -212,16 +196,16 @@ window.login = async () => {
         const result = await firebaseAuth.signIn(email, password);
         
         if (result.success) {
-            showAuthNotification(result.message, 'success');
+            showSimpleNotification(result.message, 'success');
             
             // Limpiar campos
             document.getElementById('adminUser').value = '';
             document.getElementById('adminPass').value = '';
         } else {
-            showAuthNotification(result.message, 'error');
+            showSimpleNotification(result.message, 'error');
         }
     } catch (error) {
-        showAuthNotification('Error inesperado al iniciar sesión', 'error');
+        showSimpleNotification('Error inesperado al iniciar sesión', 'error');
     } finally {
         // Re-habilitar botón
         loginBtn.disabled = false;
@@ -232,56 +216,6 @@ window.login = async () => {
 window.handleEnterKey = (event) => {
     if (event.key === 'Enter') {
         login();
-    }
-};
-
-// Función para restablecer contraseña
-window.resetPassword = async () => {
-    const email = document.getElementById('adminUser').value.trim();
-    
-    if (!email) {
-        showAuthNotification('Por favor ingresa tu email', 'error');
-        return;
-    }
-
-    try {
-        const result = await firebaseAuth.resetPassword(email);
-        
-        if (result.success) {
-            showAuthNotification('Email de restablecimiento enviado. Revisa tu bandeja de entrada.', 'success');
-        } else {
-            showAuthNotification(result.message, 'error');
-        }
-    } catch (error) {
-        showAuthNotification('Error al enviar email de restablecimiento', 'error');
-    }
-};
-
-// Función para crear cuenta de administrador (solo para setup inicial)
-window.createAdminAccount = async () => {
-    const email = prompt('Email del administrador:');
-    const password = prompt('Contraseña (mínimo 6 caracteres):');
-    
-    if (!email || !password) {
-        showAuthNotification('Email y contraseña son requeridos', 'error');
-        return;
-    }
-
-    if (password.length < 6) {
-        showAuthNotification('La contraseña debe tener al menos 6 caracteres', 'error');
-        return;
-    }
-
-    try {
-        const result = await firebaseAuth.createAdminAccount(email, password);
-        
-        if (result.success) {
-            showAuthNotification('Cuenta de administrador creada exitosamente', 'success');
-        } else {
-            showAuthNotification(result.message, 'error');
-        }
-    } catch (error) {
-        showAuthNotification('Error al crear cuenta de administrador', 'error');
     }
 };
 
@@ -831,6 +765,7 @@ window.loadReports = async () => {
                         </div>
                     </div>
                 </div>
+                <div class="clear"></div>
             `;
         });
         
@@ -1244,38 +1179,6 @@ window.openLightbox = (src) => {
 
 window.closeLightbox = () => {
     document.getElementById('lightbox').style.display = 'none';
-};
-
-// Función para crear cuenta inicial de administrador
-window.createInitialAdmin = async () => {
-    const email = document.getElementById('adminUser').value.trim();
-    const password = document.getElementById('adminPass').value;
-    
-    if (!email || !password) {
-        showAuthNotification('Por favor completa email y contraseña', 'error');
-        return;
-    }
-    
-    if (password.length < 6) {
-        showAuthNotification('La contraseña debe tener al menos 6 caracteres', 'error');
-        return;
-    }
-    
-    try {
-        showAuthNotification('Creando cuenta de administrador...', 'info');
-        
-        const result = await firebaseAuth.createAdminAccount(email, password);
-        
-        if (result.success) {
-            showAuthNotification('¡Cuenta creada exitosamente! Ya puedes iniciar sesión.', 'success');
-            // Limpiar el campo de contraseña por seguridad
-            document.getElementById('adminPass').value = '';
-        } else {
-            showAuthNotification(result.message, 'error');
-        }
-    } catch (error) {
-        showAuthNotification('Error al crear cuenta: ' + error.message, 'error');
-    }
 };
 
 // ========== FUNCIONES PARA MANEJO DE NOTICIAS ==========

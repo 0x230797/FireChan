@@ -117,7 +117,6 @@ export const imgbbConfig = {
 
 ```javascript
 const AUTHORIZED_ADMINS = [
-    'admin@firechan.org',
     'tu-email@dominio.com',  // Agrega tu email aquí
     // Agregar más emails de administradores aquí
 ];
@@ -125,8 +124,6 @@ const AUTHORIZED_ADMINS = [
 
 3. **Crear primera cuenta de administrador**:
    - Accede a `admin.html`
-   - Usa el botón "Crear Cuenta" para crear tu primera cuenta
-   - O usa la función `createAdminAccount()` desde la consola del navegador
 
 **Seguro**: Las credenciales se manejan completamente por Firebase Authentication.
 
@@ -197,7 +194,7 @@ FireChan/
 
 ### Modificar Tablones
 
-Edita los archivos HTML (`index.html`, `thread.html`, etc.) para agregar o quitar tablones:
+Edita el archivos `index.html` para agregar o quitar tablones:
 
 ```html
 <a href="thread.html?board=tu-tablón" class="board-card">
@@ -228,55 +225,7 @@ El sistema de baneos incluye estilos específicos para overlays y notificaciones
 
 ## Reglas de Firestore Recomendadas
 
-### Reglas de Desarrollo (Permisivas)
-
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Threads - lectura pública, escritura libre (temporalmente)
-    match /threads/{document=**} {
-      allow read: if true;
-      allow write: if true; // Para desarrollo - restringir en producción
-    }
-    
-    // Respuestas - lectura pública, escritura libre (temporalmente)
-    match /replies/{document=**} {
-      allow read: if true;
-      allow write: if true; // Para desarrollo - restringir en producción
-    }
-    
-    // Reportes - lectura y escritura pública para permitir reportar
-    match /reports/{document=**} {
-      allow read, write: if true;
-    }
-    
-    // Sistema de baneos - solo lectura pública, escritura restringida
-    match /ip_bans/{document=**} {
-      allow read: if true;
-      allow write: if false; // Solo via admin o server-side
-    }
-    
-    // Noticias - lectura pública, escritura solo admins
-    match /news/{document=**} {
-      allow read: if true;
-      allow write: if false; // Solo via admin
-    }
-    
-    // CAPTCHA challenges - lectura y escritura necesaria para validación
-    match /captcha_challenges/{document=**} {
-      allow read, write: if true; // Necesario para sistema anti-spam
-    }
-    
-    // Contadores - lectura pública, escritura libre para IDs
-    match /counters/{document=**} {
-      allow read, write: if true;
-    }
-  }
-}
-```
-
-### Reglas de Producción (RECOMENDADAS - Seguridad Máxima)
+### Reglas de Producción
 
 Para un entorno de producción más seguro y optimizado:
 
@@ -555,28 +504,6 @@ service firebase.storage {
 }
 ```
 
-### Resumen de Cambios para Producción
-
-**✅ Implementar:**
-1. Reglas de Firestore con validación estricta
-2. Autenticación Firebase para operaciones de admin
-3. Validación de contenido (tamaño, formato)
-4. Verificación de existencia de documentos padre
-5. Protección contra modificaciones no autorizadas
-6. Rate limiting con App Check
-7. Cloud Functions para validación backend
-8. Índices compuestos para performance
-9. Limpieza automática de datos temporales (CAPTCHA)
-10. Monitoreo y alertas de uso anormal
-
-**🔒 Beneficios de Seguridad:**
-- Previene spam y flood
-- Bloquea IPs baneadas efectivamente
-- Valida estructura de datos
-- Protege operaciones de admin
-- Optimiza queries (índices)
-- Limpia datos obsoletos automáticamente
-- Protege contra inyección de datos maliciosos
 ## Contribuciones
 
 Las contribuciones son bienvenidas. Por favor:
