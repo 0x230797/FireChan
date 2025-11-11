@@ -1,9 +1,9 @@
 import { db } from './firebase-config.js';
 import { collection, addDoc, getDoc, doc, query, where, orderBy, getDocs, updateDoc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-import { uploadConfig, imgbbConfig } from './config.js';
+import { uploadConfig, uploadImageToServer, deleteImageFromServer } from './upload-system.js';
 import { processText } from './text-processor.js';
 import { ipBanSystem } from './ip-ban-system.js';
-import { formatFileSize, getUserUniqueId, getNextPostId, getImageDimensions } from './utils.js';
+import { formatFileSize, getUserUniqueId, getNextPostId } from './utils.js';
 import { firebaseAuth } from './firebase-auth.js';
 import { validateCaptcha } from './captcha-system.js';
 
@@ -81,59 +81,6 @@ function loadQuoteFromURL() {
     }
 }
 
-// Función para subir imagen a ImgBB
-async function uploadImageToImgBB(file) {
-    if (!imgbbConfig.apiKey || imgbbConfig.apiKey === "TU_API_KEY_AQUI") {
-        throw new Error('API Key de ImgBB no configurada. Ve a https://api.imgbb.com/ para obtener una gratis.');
-    }
-    
-    // Obtener dimensiones de la imagen
-    const dimensions = await getImageDimensions(file);
-    
-    // Convertir archivo a base64
-    const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            // Remover el prefijo "data:image/...;base64,"
-            const base64String = reader.result.split(',')[1];
-            resolve(base64String);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-
-    // Crear FormData para la petición
-    const formData = new FormData();
-    formData.append('key', imgbbConfig.apiKey);
-    formData.append('image', base64);
-    formData.append('name', file.name.split('.')[0]); // Nombre sin extensión
-
-    try {
-        const response = await fetch(imgbbConfig.endpoint, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error?.message || 'Error desconocido de ImgBB');
-        }
-        return {
-            url: result.data.url,
-            width: dimensions.width,
-            height: dimensions.height
-        };
-        
-    } catch (error) {
-        throw new Error('Error al subir imagen: ' + error.message);
-    }
-}
-
 async function loadThread() {
     try {
         // Buscar thread por postId en lugar de por ID del documento
@@ -152,8 +99,30 @@ async function loadThread() {
         const threadDoc = querySnapshot.docs[0];
         const threadData = threadDoc.data();
         
+        // Verificar si el thread está bloqueado
+        const isAdmin = firebaseAuth.requireAdminAuth();
+        if (threadData.isBlocked && !isAdmin) {
+            document.getElementById('threadContainer').innerHTML = `
+                <div class="blocked-warning">
+                    <h2>🔒 Thread Bloqueado</h2>
+                    <p>Este thread ha sido bloqueado por la administración.</p>
+                    <p>Solo los administradores pueden ver y responder en este thread.</p>
+                    <a href="index.html?board=${currentBoard}" class="back-link">Volver al tablón</a>
+                </div>
+            `;
+            
+            // Ocultar formulario de respuesta
+            const replyForm = document.querySelector('.reply-form-container');
+            if (replyForm) {
+                replyForm.style.display = 'none';
+            }
+            
+            return;
+        }
+        
         // Guardar el ID real del documento para usar en loadReplies
         window.actualThreadId = threadDoc.id;
+        window.threadIsBlocked = threadData.isBlocked || false;
         
         displayThread(threadData, threadDoc.id);
         await loadReplies();
@@ -259,6 +228,13 @@ async function loadReplies() {
 }
 
 window.submitReply = async () => {
+    // Verificar si el thread está bloqueado
+    const isAdmin = firebaseAuth.requireAdminAuth();
+    if (window.threadIsBlocked && !isAdmin) {
+        alert('Este thread está bloqueado. Solo los administradores pueden responder.');
+        return;
+    }
+    
     // Verificar ban antes de proceder
     const canPost = await ipBanSystem.checkBanBeforeAction('enviar una respuesta');
     if (!canPost) {
@@ -271,8 +247,6 @@ window.submitReply = async () => {
         return; // El sistema CAPTCHA ya maneja los errores
     }
     
-    // Verificar si el administrador está logueado usando Firebase Auth
-    const isAdmin = firebaseAuth.requireAdminAuth();
     let name = document.getElementById('replyName').value;
     
     // Si no se especifica nombre, usar 'Administrador' si es admin, o 'Anónimo' si no
@@ -322,12 +296,12 @@ window.submitReply = async () => {
         
         if (file) {
             try {
-                const uploadResult = await uploadImageToImgBB(file);
+                const uploadResult = await uploadImageToServer(file, currentBoard);
                 imageUrl = uploadResult.url;
                 imageWidth = uploadResult.width;
                 imageHeight = uploadResult.height;
-                fileName = file.name;
-                fileSize = file.size;
+                fileName = uploadResult.fileName;
+                fileSize = uploadResult.size;
             } catch (uploadError) {
                 alert('Error al subir imagen: ' + uploadError.message);
                 return;

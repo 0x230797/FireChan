@@ -1,0 +1,20 @@
+# Protección de carpeta de imágenes
+# Permitir solo acceso a imágenes
+
+<FilesMatch "\.(jpg|jpeg|png|gif|webp)$">
+    Allow from all
+</FilesMatch>
+
+# Denegar acceso a archivos PHP y scripts
+<FilesMatch "\.(php|phtml|php3|php4|php5|pl|py|jsp|asp|htm|shtml|sh|cgi)$">
+    Deny from all
+</FilesMatch>
+
+# Prevenir listado de directorios
+Options -Indexes
+
+# Protección contra hotlinking (opcional)
+# RewriteEngine on
+# RewriteCond %{HTTP_REFERER} !^$
+# RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?tudominio.com [NC]
+# RewriteRule \.(jpg|jpeg|png|gif|webp)$ - [NC,F,L]

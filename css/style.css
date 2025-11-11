@@ -990,3 +990,86 @@ a:active, a:hover {
 .f-top {
     margin-top: 20px;
 }
+/* ========== ESTILOS PARA PIN Y BLOCK ========== */
+/* Badges */
+.badge {
+    display: inline-block;
+    width: 12px;
+    vertical-align: inherit;
+    filter: invert(17%) sepia(89%) saturate(7057%) hue-rotate(2deg) brightness(93%) contrast(120%);
+}
+
+/* Threads pinneados */
+.thread-container.pinned-thread {
+    background-color: #fffacd;
+    border-left: 4px solid #ffd700;
+    padding-left: 8px;
+}
+
+.thread-container.pinned-thread .thread-op {
+    background-color: #fffef0;
+}
+
+/* Threads bloqueados */
+.thread-container.blocked-thread {
+    opacity: 0.7;
+    background-color: #ffe6e6;
+    border-left: 4px solid #ff4444;
+    padding-left: 8px;
+}
+
+.thread-container.blocked-thread .thread-op {
+    background-color: #fff5f5;
+}
+
+/* Mensaje de thread bloqueado */
+.blocked-warning {
+    background-color: #ffe6e6;
+    border: 2px solid #ff4444;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    margin: 20px auto;
+    max-width: 600px;
+}
+
+.blocked-warning h2 {
+    color: #cc0000;
+    margin-bottom: 15px;
+}
+
+.blocked-warning p {
+    margin: 10px 0;
+    color: #333;
+}
+
+.blocked-warning .back-link {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.blocked-warning .back-link:hover {
+    background-color: #45a049;
+}
+
+/* Botones de admin */
+.pin-btn,
+.block-btn {
+    background-color: transparent;
+    border: none;
+    color: var(--hyperlink);
+    cursor: pointer;
+    font-size: inherit;
+    font-family: inherit;
+}
+
+.pin-btn:hover,
+.block-btn:hover {
+    color: var(--hyperlink-hover);
+    text-decoration: underline;
+}

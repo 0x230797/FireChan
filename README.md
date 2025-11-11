@@ -7,7 +7,7 @@ FireChan es un imageboard estilo 4chan/2chan desarrollado con tecnologías web m
 ### Funcionalidades Core
 - **Múltiples tablones temáticos**: Anime, Tecnología, Videojuegos, Política, Paranormal y más
 - **Sistema de publicaciones y respuestas**: Publica contenido y responde a otros usuarios
-- **Soporte de imágenes**: Integración con ImgBB para subir y almacenar imágenes
+- **Soporte de imágenes**: Almacenamiento local en el servidor con nombres estilo 4chan
 - **Formato de texto enriquecido**: Soporta greentext, citas, enlaces y referencias cruzadas
 - **Diseño responsive**: Funciona en dispositivos móviles y escritorio
 - **Lightbox para imágenes**: Visualiza imágenes en pantalla completa
@@ -39,12 +39,11 @@ FireChan es un imageboard estilo 4chan/2chan desarrollado con tecnologías web m
 - **Frontend**: HTML5, CSS3, JavaScript (ES6+ con módulos)
 - **Base de datos**: Firebase Firestore con transacciones y queries optimizados
 - **Autenticación**: Firebase Authentication para administradores
-- **Almacenamiento**: ImgBB API para hosting de imágenes
+- **Almacenamiento**: Sistema local de imágenes en el servidor (PHP)
 - **Arquitectura**: Sistema modular con utilidades centralizadas
 - **Seguridad**: Sistema CAPTCHA matemático con validación dual
 - **APIs externas**: 
   - ipify.org para detección de IP
-  - ImgBB para almacenamiento de imágenes
   - Firebase Auth para autenticación segura
 - **Diseño**: Inspirado en imageboards clásicos con mejoras modernas
 
@@ -53,8 +52,8 @@ FireChan es un imageboard estilo 4chan/2chan desarrollado con tecnologías web m
 Antes de comenzar, necesitas:
 
 1. Una cuenta de [Firebase](https://firebase.google.com/)
-2. Una API key de [ImgBB](https://api.imgbb.com/) (gratuita)
-3. Un servidor web local o hosting web
+2. Un servidor web con PHP 7.0+ (como XAMPP, WAMP, o hosting con PHP)
+3. Permisos de escritura en la carpeta `img/board/`
 
 ## Instalación y Configuración
 
@@ -97,17 +96,19 @@ const firebaseConfig = {
 };
 ```
 
-### 3. Configurar ImgBB API
+### 3. Configurar Permisos de Carpetas
 
-1. Regístrate en [ImgBB](https://imgbb.com/) y obtén tu API key gratuita
-2. Abre el archivo `js/config.js`
-3. Reemplaza la API key con la tuya:
+Las imágenes se almacenan localmente en `img/board/`. Asegúrate de que el servidor web tenga permisos de escritura:
 
-```javascript
-export const imgbbConfig = {
-    apiKey: "TU_API_KEY_DE_IMGBB",
-    endpoint: "https://api.imgbb.com/1/upload"
-};
+**En Windows (XAMPP):**
+```powershell
+icacls "c:\xampp\htdocs\FireChan\img\board" /grant "Everyone:(OI)(CI)F" /T
+```
+
+**En Linux:**
+```bash
+chmod -R 755 img/board/
+chown -R www-data:www-data img/board/
 ```
 
 ### 4. Configurar Administradores Autorizados
@@ -127,13 +128,24 @@ const AUTHORIZED_ADMINS = [
 
 **Seguro**: Las credenciales se manejan completamente por Firebase Authentication.
 
-### 5. Desplegar el Sitio
+### 5. Configurar PHP en tu Servidor
+
+Asegúrate de que:
+- PHP 7.0 o superior está instalado
+- Apache está configurado para procesar archivos .php
+- El módulo `mod_rewrite` está habilitado (opcional, para .htaccess)
+
+**En XAMPP**: Todo viene preconfigurado, solo asegúrate de iniciar Apache.
+
+### 6. Desplegar el Sitio
 
 Puedes desplegar en:
-- **Firebase Hosting**: `firebase deploy`
-- **GitHub Pages**: Sube los archivos a tu repositorio
-- **Netlify/Vercel**: Conecta tu repositorio de GitHub
-- Cualquier hosting web estático
+- **Servidor local**: XAMPP, WAMP, MAMP con soporte PHP
+- **Hosting compartido**: Cualquier hosting con PHP 7.0+ y MySQL/Firebase
+- **VPS/Cloud**: AWS, DigitalOcean, Linode con LAMP stack
+- **Firebase Hosting**: Requiere configuración adicional para PHP (usar Cloud Functions)
+
+**Nota**: El sistema de imágenes requiere PHP, por lo que no funciona en hosting puramente estático como GitHub Pages.
 
 ## Estructura del Proyecto
 
@@ -144,6 +156,8 @@ FireChan/
 ├── reply.html              # Vista de publicación individual con respuestas
 ├── admin.html              # Panel de administración completo
 ├── rules.html              # Reglas del sitio
+├── upload.php              # Script de subida de imágenes
+├── delete-image.php        # Script de eliminación de imágenes
 ├── css/
 │   ├── style.css           # Estilos principales
 │   └── reset.css           # Reset CSS
@@ -152,6 +166,7 @@ FireChan/
 │   ├── firebase-auth.js    # Sistema de autenticación Firebase
 │   ├── config.js           # Configuración general
 │   ├── utils.js            # Utilidades centralizadas
+│   ├── upload-system.js    # Sistema de subida local de imágenes
 │   ├── thread.js           # Lógica de publicaciones
 │   ├── reply.js            # Lógica de respuestas
 │   ├── admin.js            # Panel admin con gestión de IPs
@@ -160,7 +175,17 @@ FireChan/
 │   ├── ban-integration.js  # Integración automática de baneos
 │   ├── captcha-system.js   # Sistema CAPTCHA matemático anti-spam
 │   └── stats.js            # Estadísticas del sitio
-└── README.md
+├── img/
+│   └── board/              # Carpeta de imágenes organizadas por board
+│       ├── a/              # Imágenes de /a/
+│       ├── b/              # Imágenes de /b/
+│       ├── g/              # Imágenes de /g/
+│       ├── v/              # Imágenes de /v/
+│       ├── pol/            # Imágenes de /pol/
+│       ├── x/              # Imágenes de /x/
+│       ├── me/             # Imágenes de /me/
+│       └── .htaccess       # Protección de seguridad
+├── README.md
 ```
 
 ## Uso

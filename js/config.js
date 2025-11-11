@@ -6,10 +6,3 @@ export const uploadConfig = {
         type: "Solo se permiten imágenes (JPEG, PNG, GIF, WEBP)"
     }
 };
-
-// Configuración de ImgBB API
-export const imgbbConfig = {
-    // Obtén tu API key gratuita en: https://api.imgbb.com/
-    apiKey: "31d6ec137c463e0cf5f9db7b6bf6c3bf", // Reemplaza esto con tu API key de ImgBB
-    endpoint: "https://api.imgbb.com/1/upload"
-};

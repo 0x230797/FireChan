@@ -15,6 +15,7 @@ import {
 import { processText } from './text-processor.js';
 import { formatFileSize } from './utils.js';
 import { firebaseAuth } from './firebase-auth.js';
+import { deleteImageFromServer } from './upload-system.js';
 
 // Función simple de notificación para evitar errores
 function showSimpleNotification(message, type = 'info') {
@@ -475,6 +476,10 @@ window.loadThreads = async () => {
                 </div>
             ` : '';
 
+            // Badges para pin y block
+            const pinBadge = thread.isPinned ? '<img class="badge badge-pin" src="src/imgs/sticky.png" alt="Pinned" title="Thread fijado">' : '';
+            const blockBadge = thread.isBlocked ? '<img class="badge badge-block" src="src/imgs/lock.png" alt="Blocked" title="Thread bloqueado">' : '';
+            
             threadsHTML += `
                 <div class="thread-container">
                     <div class="thread-op">
@@ -484,12 +489,16 @@ window.loadThreads = async () => {
                         </div>
                         <div class="thread-header">
                             <span class="subject">/${thread.board}/ - ${thread.subject || ''}</span>
+                            ${pinBadge}
+                            ${blockBadge}
                             <span class="name ${nameClass}">${displayName}</span>
                             <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                             <span class="id">No.${thread.postId || 'N/A'}</span>
                             <span class="ip" style="color: #666; font-family: monospace; cursor: pointer; text-decoration: underline;" onclick="copyIP('${thread.userIP}')" title="Clic para copiar IP al portapapeles">IP: ${thread.userIP || 'No disponible'}</span>
                             [<a href="reply.html?board=${thread.board}&thread=${thread.postId}">Ver publicación</a>]
                             <button class="delete-btn" onclick="deleteThread('${doc.id}')">[Eliminar]</button>
+                            <button class="pin-btn" onclick="togglePinThread('${doc.id}', ${thread.isPinned || false})">[${thread.isPinned ? 'Unpin' : 'Pin'}]</button>
+                            <button class="block-btn" onclick="toggleBlockThread('${doc.id}', ${thread.isBlocked || false})">[${thread.isBlocked ? 'Unblock' : 'Block'}]</button>
                         </div>
                         <div class="comment">${processText(thread.comment)}</div>
                     </div>
@@ -586,14 +595,34 @@ window.deleteThread = async (threadId) => {
     if (!confirm('¿Estás seguro de que quieres eliminar este thread?')) return;
 
     try {
-        await deleteDoc(doc(db, 'threads', threadId));
-        // También eliminar todas las respuestas asociadas
+        // Obtener datos del thread antes de eliminar
+        const threadDoc = await getDoc(doc(db, 'threads', threadId));
+        const threadData = threadDoc.data();
+        
+        // Eliminar imagen del thread si existe
+        if (threadData && threadData.imageUrl) {
+            await deleteImageFromServer(threadData.imageUrl);
+        }
+        
+        // Obtener y eliminar todas las respuestas asociadas
         const repliesQuery = query(collection(db, 'replies'), where('threadId', '==', threadId));
         const repliesSnapshot = await getDocs(repliesQuery);
         
-        const deletePromises = repliesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+        // Eliminar imágenes de las respuestas
+        const deletePromises = repliesSnapshot.docs.map(async (replyDoc) => {
+            const replyData = replyDoc.data();
+            if (replyData.imageUrl) {
+                await deleteImageFromServer(replyData.imageUrl);
+            }
+            return deleteDoc(replyDoc.ref);
+        });
+        
         await Promise.all(deletePromises);
+        
+        // Eliminar el thread
+        await deleteDoc(doc(db, 'threads', threadId));
 
+        showSimpleNotification('Thread y todas sus imágenes eliminadas', 'success');
         loadThreads();
     } catch (error) {
         alert('Error al eliminar el thread: ' + error.message);
@@ -608,10 +637,68 @@ window.deleteReply = async (replyId) => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta respuesta?')) return;
 
     try {
+        // Obtener datos de la respuesta antes de eliminar
+        const replyDoc = await getDoc(doc(db, 'replies', replyId));
+        const replyData = replyDoc.data();
+        
+        // Eliminar imagen si existe
+        if (replyData && replyData.imageUrl) {
+            await deleteImageFromServer(replyData.imageUrl);
+        }
+        
+        // Eliminar la respuesta
         await deleteDoc(doc(db, 'replies', replyId));
+        
+        showSimpleNotification('Respuesta e imagen eliminadas', 'success');
         loadReplies();
     } catch (error) {
         alert('Error al eliminar la respuesta: ' + error.message);
+    }
+};
+
+// Función para fijar/desfijar threads
+window.togglePinThread = async (threadId, currentPinStatus) => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+
+    try {
+        const threadRef = doc(db, 'threads', threadId);
+        await updateDoc(threadRef, {
+            isPinned: !currentPinStatus
+        });
+        
+        showSimpleNotification(
+            currentPinStatus ? 'Thread desfijado exitosamente' : 'Thread fijado exitosamente',
+            'success'
+        );
+        
+        loadThreads();
+    } catch (error) {
+        showSimpleNotification('Error al cambiar estado de pin: ' + error.message, 'error');
+    }
+};
+
+// Función para bloquear/desbloquear threads
+window.toggleBlockThread = async (threadId, currentBlockStatus) => {
+    if (!checkAdminAuth()) {
+        return;
+    }
+
+    try {
+        const threadRef = doc(db, 'threads', threadId);
+        await updateDoc(threadRef, {
+            isBlocked: !currentBlockStatus
+        });
+        
+        showSimpleNotification(
+            currentBlockStatus ? 'Thread desbloqueado exitosamente' : 'Thread bloqueado exitosamente',
+            'success'
+        );
+        
+        loadThreads();
+    } catch (error) {
+        showSimpleNotification('Error al cambiar estado de bloqueo: ' + error.message, 'error');
     }
 };
 
@@ -816,14 +903,29 @@ window.deleteReportedContent = async (contentId, contentType, reportId) => {
                 return;
             }
             
-            // Eliminar thread
-            await deleteDoc(doc(db, 'threads', contentId));
+            const threadData = threadDoc.data();
             
-            // Eliminar todas las respuestas del thread
+            // Eliminar imagen del thread si existe
+            if (threadData.imageUrl) {
+                await deleteImageFromServer(threadData.imageUrl);
+            }
+            
+            // Obtener y eliminar todas las respuestas del thread
             const repliesQuery = query(collection(db, 'replies'), where('threadId', '==', contentId));
             const repliesSnapshot = await getDocs(repliesQuery);
-            const deletePromises = repliesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+            
+            // Eliminar imágenes de las respuestas
+            const deletePromises = repliesSnapshot.docs.map(async (replyDoc) => {
+                const replyData = replyDoc.data();
+                if (replyData.imageUrl) {
+                    await deleteImageFromServer(replyData.imageUrl);
+                }
+                return deleteDoc(replyDoc.ref);
+            });
             await Promise.all(deletePromises);
+            
+            // Eliminar el thread
+            await deleteDoc(doc(db, 'threads', contentId));
             
             console.log(`Thread eliminado junto con ${repliesSnapshot.size} respuestas`);
         } else {
@@ -837,6 +939,13 @@ window.deleteReportedContent = async (contentId, contentType, reportId) => {
                 return;
             }
             
+            const replyData = replyDoc.data();
+            
+            // Eliminar imagen si existe
+            if (replyData.imageUrl) {
+                await deleteImageFromServer(replyData.imageUrl);
+            }
+            
             // Eliminar respuesta
             await deleteDoc(doc(db, 'replies', contentId));
             console.log('Respuesta eliminada');
@@ -846,7 +955,7 @@ window.deleteReportedContent = async (contentId, contentType, reportId) => {
         await deleteDoc(doc(db, 'reports', reportId));
         
         loadReports();
-        alert('Contenido eliminado exitosamente');
+        alert('Contenido e imágenes eliminadas exitosamente');
     } catch (error) {
         console.error('Error al eliminar contenido:', error);
         alert('Error al eliminar el contenido: ' + error.message);

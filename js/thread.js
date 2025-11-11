@@ -1,10 +1,10 @@
 import { db } from './firebase-config.js';
 import { collection, addDoc, query, where, orderBy, getDocs, serverTimestamp, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-import { uploadConfig, imgbbConfig } from './config.js';
+import { uploadConfig, uploadImageToServer, deleteImageFromServer } from './upload-system.js';
 import { processText } from './text-processor.js';
 import { ipBanSystem } from './ip-ban-system.js';
 import { firebaseAuth } from './firebase-auth.js';
-import { formatFileSize, getUserUniqueId, getNextPostId, getImageDimensions } from './utils.js';
+import { formatFileSize, getUserUniqueId, getNextPostId } from './utils.js';
 import { validateCaptcha } from './captcha-system.js';
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -43,60 +43,6 @@ function checkAdminStatusForForm() {
     }
 }
 
-// Función para subir imagen a ImgBB
-async function uploadImageToImgBB(file) {
-    if (!imgbbConfig.apiKey || imgbbConfig.apiKey === "TU_API_KEY_AQUI") {
-        throw new Error('API Key de ImgBB no configurada. Ve a https://api.imgbb.com/ para obtener una gratis.');
-    }
-    
-    // Obtener dimensiones de la imagen
-    const dimensions = await getImageDimensions(file);
-    
-    // Convertir archivo a base64
-    const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            // Remover el prefijo "data:image/...;base64,"
-            const base64String = reader.result.split(',')[1];
-            resolve(base64String);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-
-    // Crear FormData para la petición
-    const formData = new FormData();
-    formData.append('key', imgbbConfig.apiKey);
-    formData.append('image', base64);
-    formData.append('name', file.name.split('.')[0]); // Nombre sin extensión
-
-    try {
-        const response = await fetch(imgbbConfig.endpoint, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error?.message || 'Error desconocido de ImgBB');
-        }
-        
-        return {
-            url: result.data.url,
-            width: dimensions.width,
-            height: dimensions.height
-        };
-        
-    } catch (error) {
-        throw new Error('Error al subir imagen: ' + error.message);
-    }
-}
-
 async function loadThreads() {
     const threadsContainer = document.getElementById('threadsContainer');
     threadsContainer.innerHTML = `
@@ -113,9 +59,9 @@ async function loadThreads() {
         );
         
         const querySnapshot = await getDocs(q);
-        let threadsHTML = '';
+        let threads = [];
         
-        // Procesar cada thread
+        // Recopilar todos los threads y contar respuestas
         for (const doc of querySnapshot.docs) {
             const thread = doc.data();
             const timestamp = thread.timestamp ? 
@@ -129,6 +75,33 @@ async function loadThreads() {
             );
             const repliesSnapshot = await getDocs(repliesQuery);
             const actualReplyCount = repliesSnapshot.size;
+
+            threads.push({
+                docId: doc.id,
+                data: thread,
+                timestamp: timestamp,
+                replyCount: actualReplyCount
+            });
+        }
+
+        // Ordenar: primero los pinneados, luego por timestamp
+        threads.sort((a, b) => {
+            // Si uno está pinneado y el otro no, el pinneado va primero
+            if (a.data.isPinned && !b.data.isPinned) return -1;
+            if (!a.data.isPinned && b.data.isPinned) return 1;
+            
+            // Si ambos tienen el mismo estado de pin, ordenar por timestamp
+            return b.timestamp - a.timestamp;
+        });
+
+        let threadsHTML = '';
+        
+        // Procesar cada thread ordenado
+        for (const threadItem of threads) {
+            const thread = threadItem.data;
+            const timestamp = threadItem.timestamp;
+            const actualReplyCount = threadItem.replyCount;
+            const doc = { id: threadItem.docId };
                 
             // Crear sección de archivo si hay imagen
             const fileSection = thread.imageUrl ? `
@@ -140,14 +113,18 @@ async function loadThreads() {
             ` : '';
 
             // Cargar las últimas 5 respuestas de este thread
-            const repliesHTML = await loadLastReplies(doc.id, actualReplyCount, thread.postId);
+            const repliesHTML = await loadLastReplies(threadItem.docId, actualReplyCount, thread.postId);
             
             // Verificar si es post de admin para aplicar estilo especial
             const nameClass = thread.isAdmin ? 'admin-name' : '';
             const displayName = thread.name || 'Anónimo';
 
+            // Badges para pin y block
+            const pinBadge = thread.isPinned ? '<img class="badge badge-pin" src="src/imgs/sticky.png" alt="Pinned" title="Thread fijado">' : '';
+            const blockBadge = thread.isBlocked ? '<img class="badge badge-block" src="src/imgs/lock.png" alt="Blocked" title="Thread bloqueado">' : '';
+
             threadsHTML += `
-                <div class="thread-container">
+                <div class="thread-container ${thread.isPinned ? 'pinned-thread' : ''} ${thread.isBlocked ? 'blocked-thread' : ''}">
                     <div class="thread-op" data-post-id="${thread.postId}" data-id="${thread.postId}" id="${thread.postId}">
                         ${fileSection}
                         <div class="post-image">
@@ -155,6 +132,8 @@ async function loadThreads() {
                         </div>
                         <div class="thread-header">
                             <span class="subject">${thread.subject || ''}</span>
+                            ${pinBadge}
+                            ${blockBadge}
                             <span class="name ${nameClass}">${displayName}</span>
                             <span class="date">${timestamp.toLocaleString().replace(',', '')}</span>
                             <span class="id" onclick="quotePost('${thread.postId || 'N/A'}', '${thread.postId || 'N/A'}')" style="cursor: pointer;" title="Responder a esta publicación">No.${thread.postId || 'N/A'}</span>
@@ -231,14 +210,14 @@ window.submitThread = async () => {
         let imageHeight = null;
         
         if (file) {
-            // Usar ImgBB en lugar de Firebase Storage
+            // Subir imagen al servidor local
             try {
-                const uploadResult = await uploadImageToImgBB(file);
+                const uploadResult = await uploadImageToServer(file, currentBoard);
                 imageUrl = uploadResult.url;
                 imageWidth = uploadResult.width;
                 imageHeight = uploadResult.height;
-                fileName = file.name;
-                fileSize = file.size;
+                fileName = uploadResult.fileName;
+                fileSize = uploadResult.size;
             } catch (uploadError) {
                 alert('Error al subir imagen: ' + uploadError.message);
                 return;
@@ -302,7 +281,7 @@ function updateBoardTitle() {
         'me': 'Sugerencias, dudas y comentarios sobre el sitio'
     };
 
-    document.getElementById('boardTitle').textContent = `/${currentBoard}/ - ${boardTitles[currentBoard] || ''}`;
+    document.getElementById('boardTitle').textContent = boardTitles[currentBoard] || '';
     document.getElementById('boardSubtitle').textContent = boardDescriptions[currentBoard] || '';
 }
 
